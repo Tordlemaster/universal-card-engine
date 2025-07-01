@@ -1,0 +1,9 @@
+TURN {
+    DRAW "Draw pile" "{player name}'s Hand"
+
+    CHOOSE ANY {
+        "Meld" COND {
+
+        }
+    }
+}
