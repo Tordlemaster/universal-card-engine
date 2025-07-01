@@ -1,0 +1,6 @@
+If a rule says to DEAL to a deck with a name which no existing deck has, automatically create the deck with that name
+
+CHOOSE ANY: perform any choices of action any number of times or none
+CHOOSE EITHER: perform one choice of action once
+
+DEAL source -> dest

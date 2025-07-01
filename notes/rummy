@@ -1,0 +1,47 @@
+DECKS:
+
+Draw pile (all face down) (unowned)
+Discard pile (face up)
+Player hands (hidden except to that player) (unowned)
+
+Should hidden/face down vs face up be controlled simply with flags representing whether each player can see the contents of the deck
+
+SETUP:
+
+Deal 10 cards from the draw pile to each player's hand
+Deal 1 card from the draw pile to the discard pile
+
+GAME STRUCTURE:
+
+Repeat:
+1 player turn
+Check win condition
+
+TURN:
+
+1. Draw card into hand from draw pile OR discard pile
+
+2. CHOOSE AND/OR (meaning you can do either or both) {
+
+    "Meld"
+
+    Create a new unowned deck and deal a subset of the cards in your hand into it,
+    as long as the subset of cards satisfies the following conditions:
+        3 cards
+        Same suit
+        Consecutive values
+
+    "Lay off"
+
+    Deal any number of cards into an existing "meld" deck, as long as the resulting deck
+    satisfies the following conditions:
+        Same suit
+        Consecutive values
+}
+
+3. Move one card from hand into discard pile
+
+WIN CONDITION:
+
+If a player has no cards in their hand, they win the round
+And gain points equal to the total of the values of the cards in other players' hands
