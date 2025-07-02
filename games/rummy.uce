@@ -1,9 +1,70 @@
-TURN {
-    DRAW "Draw pile" "{player name}'s Hand"
+STATES {
+    SETUP {
+        NEWDECK "Draw pile" SD UNOWNED
+        NEWDECK "Discard pile" SU UNOWNED
 
-    CHOOSE ANY {
-        "Meld" COND {
+        FORPLAYER {
+            NEWDECK "[THISPLAYER]'s hand" AD THISPLAYER
+            DEAL "Draw pile" "[THISPLAYER]'s hand" 1
+        }
 
+        DEAL "Draw pile" "Discard pile" 1
+
+        STATE MAIN
+    }
+
+    ROUND {
+        FORPLAYER {
+            CHOOSE EITHER {
+                "Draw from draw pile" {
+                    DEAL "Draw pile" "[THISPLAYER]'s hand" 1
+                }
+
+                "Draw from discard pile" {
+                    DEAL "Discard pile" "[THISPLAYER]'s hand" 1
+                }
+            }
+
+            CHOOSE ANY {
+                "Meld" CONDRESULT {
+                    CONDDECK "Meld #" {
+                        SAMESUITS
+                        CONSVALS
+                    }
+                } {
+                    NEWDECK "Meld #" AD UNOWNED
+                    DEAL "[THISPLAYER]'s hand" "Meld #" 3
+                }
+
+                "Lay off" CONDRESULT {
+                    CONDDECK "Meld #" {
+                        SAMESUITS
+                        CONSVALS
+                    }
+                } {
+                    DEAL "[THISPLAYER]'s hand" "Meld #" N
+                }
+            }
+
+            IF CONDDECK "[THISPLAYER]'s hand" {
+                SIZE 0
+            } {
+                STATE SCORING {[WINPLAYER]=[THISPLAYER]}
+            }
         }
     }
+
+    SCORING {
+        FORPLAYERCOND {
+            NOT PLAYERNAME [WINPLAYER]
+        } {
+            VARASSIGN [X] SCOREDECK "[THISPLAYER]'s hand" 
+            SCORE ADD [THISPLAYER] [X]
+        }
+    }
+}
+
+
+WINCONDP {
+    SIZE 0 "[THISPLAYER]"
 }

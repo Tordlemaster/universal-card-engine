@@ -1,6 +1,29 @@
 If a rule says to DEAL to a deck with a name which no existing deck has, automatically create the deck with that name
+When a # is in a deck's name, it should be replaced with a number one more than the deck with the
+highest number version of the same name
+
+When a * is in a deck's name, perform pattern matching with it as the wildcard and present
+all the options to the player (if it appears in the TURN section)
+If it is present in the GAME STRUCTURE section, a random option will be chosen
 
 CHOOSE ANY: perform any choices of action any number of times or none
 CHOOSE EITHER: perform one choice of action once
 
-DEAL source -> dest
+DEAL source -> dest quantity
+If quantity is N, then the player can make a choice of how many they want to deal
+
+Deck flags: (S)tack/(A)rray, Face (U)p/(D)own
+NEWDECK {name} {flags} {ownership/who can see it}
+ownerships: UNOWNED, THISPLAYER, CHOOSEPLAYER, THISTEAM, CHOOSETEAM
+
+CONDRESULT is checked after the action is performed, and the action is undone if the conditions are not met
+CONDINIT is checked before the action is performed, and no action is performed if the conditions are not met
+
+WINCOND(P)layer/(T)eam/(G)lobal
+
+ActionScope trait:
+Has a set of variable bindings for THISPLAYER and deck #s, etc.
+List of impl Actions
+Deck names are stored in Actions as strings and variables are evaluated when the Action is executed
+
+FORPLAYERCOND (except) will check the condition for each player encountered and ignore ones that do not meet the condition
