@@ -13,7 +13,7 @@ STATES {
         STATE MAIN
     }
 
-    ROUND {
+    MAIN {
         FORPLAYER {
             CHOOSE EITHER {
                 "Draw from draw pile" {
@@ -62,9 +62,4 @@ STATES {
             SCORE ADD [THISPLAYER] [X]
         }
     }
-}
-
-
-WINCONDP {
-    SIZE 0 "[THISPLAYER]"
 }
