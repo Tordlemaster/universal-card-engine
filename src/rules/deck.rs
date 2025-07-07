@@ -52,11 +52,13 @@ impl Card {
 }
 
 //Use a HeldCard struct to contain the card in the hand and also store information about whether the card is turned
-
+#[derive(Clone)]
 pub struct DeckVisibility {
     /// When true, the cards are stacked and only the top one is visible to players with permission.
     /// When false, the cards are spread and all are visible to players with permission.
     stack: bool,
+
+    visible_to_all: bool,
 
     ///Names of players who can see the contents of this deck
     players_visible: Vec<String>,
@@ -66,8 +68,8 @@ pub struct DeckVisibility {
 }
 
 impl DeckVisibility {
-    pub fn new(stack: bool, players_visible: Vec<String>, teams_visible: Vec<usize>) -> DeckVisibility {
-        DeckVisibility { stack: stack, players_visible: players_visible, teams_visible: teams_visible }
+    pub fn new(stack: bool, visible_to_all: bool, players_visible: Vec<String>, teams_visible: Vec<usize>) -> DeckVisibility {
+        DeckVisibility { stack: stack, visible_to_all: visible_to_all, players_visible: players_visible, teams_visible: teams_visible }
     }
 
     ///Visible to all players
@@ -91,8 +93,14 @@ impl Deck {
     pub fn cards(&self) -> &Vec<Card> {
         &self.cards
     }
+    pub fn visibility(&self) -> &DeckVisibility {
+        &self.visibility
+    }
     pub fn stack(&self) -> bool {
         self.visibility.stack
+    }
+    pub fn visible_to_all(&self) -> bool {
+        self.visibility.visible_to_all
     }
     pub fn players_visible(&self) -> &Vec<String> {
         &self.visibility.players_visible
@@ -135,6 +143,19 @@ impl DeckSet {
     }
     pub fn add_deck(&mut self, name: String, visibility: DeckVisibility) {
         self.decks.insert(name, Deck::new(Vec::new(), visibility));
+    }
+    pub fn remove_deck(&mut self, name: &String) {
+        if let Some(d) = self.decks.get(name) {
+            if d.len() == 0 {
+                self.decks.remove(name);
+            }
+            else {
+                panic!("Script error: tried to remove non-empty deck {}", name);
+            }
+        }
+        else {
+            panic!("Script error: tried to remove non-existent deck {}", name);
+        }
     }
 
     pub fn iter_decks(&self) -> Iter<String, Deck> {

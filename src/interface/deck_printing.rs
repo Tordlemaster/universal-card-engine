@@ -9,12 +9,12 @@ pub fn print_all_decks(game_world: &GameWorld, player: &Player) {
     }
 }
 
-fn print_deck(deck_name: &String, deck: &Deck, player: &Player, card_set_data: &CardSetData) {
+pub fn print_deck(deck_name: &String, deck: &Deck, player: &Player, card_set_data: &CardSetData) {
     //Name of the deck
     println!("{}:", deck_name);
 
     if deck.len() > 0 {
-        if deck.players_visible().contains(player.name()) || deck.teams_visible().contains(player.team()) {
+        if deck.visible_to_all() || deck.players_visible().contains(player.name()) || deck.teams_visible().contains(player.team()) {
             match deck.stack() {
                 true => {
                     //"Card on top name" + N more underneath

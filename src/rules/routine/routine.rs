@@ -1,30 +1,32 @@
-use crate::rules::{game::GameWorld, variable::VarBindSet};
+use crate::rules::{game::GameWorld, state::StateSwitchData, variable::VarBindSet};
 
 pub trait Routine {
-    fn execute (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> ();
+    fn execute (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData>;
 
     fn undo (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> ();
 }
 
-pub struct BaseRoutine {
+pub struct SeqRoutine {
     routine: Vec<Box<dyn Routine>>,
-    bindings: VarBindSet
 }
 
-impl BaseRoutine {
-    pub fn new (routine: Vec<Box<dyn Routine>>, bindings: VarBindSet) -> BaseRoutine {
-        BaseRoutine {
+impl SeqRoutine {
+    pub fn new (routine: Vec<Box<dyn Routine>>) -> SeqRoutine {
+        SeqRoutine {
             routine: routine,
-            bindings: bindings
         }
     }
 }
 
-impl Routine for BaseRoutine {
-    fn execute (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+impl Routine for SeqRoutine {
+    fn execute (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
         for r in self.routine.iter() {
-            r.execute(&bindings.clone(), game_world);
+            if let Some(ssd) = r.execute(&bindings.clone(), game_world) {
+                return Some(ssd);
+            }
         }
+        //None of the sub-routines returned a StateSwitchData
+        None
     }
 
     fn undo (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
