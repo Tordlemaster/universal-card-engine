@@ -1,17 +1,18 @@
 use std::{cmp::max, collections::{hash_map::Iter, HashMap}};
 
-use crate::rules::{deck::{CardSetData, Deck, DeckSet, DeckVisibility}, player::{Player, PlayerSet}};
+use crate::rules::{deck::{CardSetData, Deck, DeckSet, DeckVisibility}, player::{Player, PlayerSet}, state::StateSet};
 
 pub struct GameWorld {
     decks: DeckSet,
     players: PlayerSet,
-
     card_set_data: CardSetData,
+
+    states: StateSet
 }
 
 impl GameWorld {
-    pub fn new(players: Vec<Player>, card_set_data: CardSetData) -> GameWorld {
-        GameWorld { decks: DeckSet::new(), players: PlayerSet::new(players), card_set_data: card_set_data }
+    pub fn new(players: Vec<Player>, card_set_data: CardSetData, state_set: StateSet) -> GameWorld {
+        GameWorld { decks: DeckSet::new(), players: PlayerSet::new(players), card_set_data: card_set_data, states: state_set}
     }
 
     pub fn add_source_deck(&mut self, name: String, visibility: DeckVisibility) {
@@ -19,6 +20,10 @@ impl GameWorld {
     }
     pub fn add_deck(&mut self, name: String, visibility: DeckVisibility) {
         self.decks.add_deck(name, visibility);
+    }
+
+    pub fn remove_deck(&mut self, name: &String) {
+        self.decks.remove_deck(name);
     }
 
     pub fn deal(&mut self, source: &String, dest: &String, n: usize) -> Result<usize, usize>{

@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use crate::rules::{conditional::base_conditional::{Conditional, ConditionalMode}, deck::Deck};
+use crate::rules::{conditional::conditional::{Conditional, ConditionalMode}, deck::Deck, routine::evaluatables::EvaluatableString, variable::VarBindSet};
 
 pub trait DeckConditionalElement {
     fn evaluate(&self, deck: &Deck) -> bool;
@@ -9,21 +9,21 @@ pub trait DeckConditionalElement {
 pub struct DeckConditional {
     conditions: Vec<Box<dyn DeckConditionalElement>>,
     mode: ConditionalMode,
-    deck_name: String
+    deck_name: EvaluatableString
 }
 
 impl DeckConditional {
-    pub fn new(conditions: Vec<Box<dyn DeckConditionalElement>>, mode: ConditionalMode, deck_name: String) -> DeckConditional {
-        DeckConditional {conditions: conditions, mode: mode, deck_name: deck_name}
+    pub fn new(conditions: Vec<Box<dyn DeckConditionalElement>>, mode: ConditionalMode, deck_name: &String) -> DeckConditional {
+        DeckConditional {conditions: conditions, mode: mode, deck_name: EvaluatableString::new(deck_name)}
     }
 }
 
 impl Conditional for DeckConditional {
-    fn evaluate(&self, game_world: &crate::rules::game::GameWorld) -> bool {
+    fn evaluate(&self, bindings: &VarBindSet, game_world: &crate::rules::game::GameWorld) -> bool {
         if self.mode == ConditionalMode::And {
             let mut result = true;
             for c in &self.conditions {
-                result = result && c.evaluate(game_world.get_deck(&self.deck_name).unwrap());
+                result = result && c.evaluate(game_world.get_deck(&self.deck_name.evaluate(bindings, game_world)).unwrap());
                 if !result { //Short circuit AND when value becomes false
                     break;
                 }
@@ -33,7 +33,7 @@ impl Conditional for DeckConditional {
         else {
             let mut result = false;
             for c in &self.conditions {
-                result = result || c.evaluate(game_world.get_deck(&self.deck_name).unwrap());
+                result = result || c.evaluate(game_world.get_deck(&self.deck_name.evaluate(bindings, game_world)).unwrap());
                 if result { //Short circuit OR when value becomes true
                     break;
                 }
@@ -71,6 +71,12 @@ pub struct DeckSuitsConditional{
     mode: DeckSuitsComp
 }
 
+impl DeckSuitsConditional {
+    pub fn new(mode: DeckSuitsComp) -> DeckSuitsConditional {
+        DeckSuitsConditional { mode: mode }
+    }
+}
+
 impl DeckConditionalElement for DeckSuitsConditional {
     fn evaluate(&self, deck: &Deck) -> bool {
         match self.mode {
@@ -99,6 +105,12 @@ pub enum DeckValsComp {
 
 pub struct DeckValsConditional {
     mode: DeckValsComp
+}
+
+impl DeckValsConditional {
+    pub fn new(mode: DeckValsComp) -> DeckValsConditional {
+        DeckValsConditional { mode: mode }
+    }
 }
 
 impl DeckConditionalElement for DeckValsConditional {

@@ -1,10 +1,10 @@
 STATES {
     SETUP {
-        NEWDECK "Draw pile" SD UNOWNED
+        NEWSDECK "Draw pile" SD UNOWNED
         NEWDECK "Discard pile" SU UNOWNED
 
         FORPLAYER {
-            NEWDECK "[THISPLAYER]'s hand" AD THISPLAYER
+            NEWDECK "[THISPLAYER]'s hand" AD [THISPLAYER]
             DEAL "Draw pile" "[THISPLAYER]'s hand" 1
         }
 
@@ -26,7 +26,7 @@ STATES {
             }
 
             CHOOSE ANY {
-                "Meld" CONDRESULT {
+                "Meld" POSTCOND {
                     CONDDECK "Meld #" {
                         SAMESUITS
                         CONSVALS
@@ -36,7 +36,7 @@ STATES {
                     DEAL "[THISPLAYER]'s hand" "Meld #" 3
                 }
 
-                "Lay off" CONDRESULT {
+                "Lay off" POSTCOND {
                     CONDDECK "Meld #" {
                         SAMESUITS
                         CONSVALS

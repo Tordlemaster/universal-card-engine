@@ -1,7 +1,10 @@
-use crate::{interface::deck_printing::print_all_decks, rules::{deck::{CardAttr, CardSetData, DeckVisibility}, game::GameWorld, player::Player}};
+use crate::{interface::deck_printing::{print_all_decks, print_deck}, rules::{deck::{CardAttr, CardSetData, DeckVisibility}, game::GameWorld, player::Player, routine::evaluatables::EvaluatableString, state::StateSet, variable::VarBindSet}};
 
 pub mod rules;
 pub mod interface;
+pub mod script;
+
+mod test_rummy;
 
 fn main() {
     let players = vec![Player::new("bip".to_string(), 0), Player::new("bop".to_string(), 1)];
@@ -29,12 +32,12 @@ fn main() {
         ],
         1
     );
-    let mut world = GameWorld::new(players, card_set_data);
+    let mut world = GameWorld::new(players, card_set_data, StateSet::new(Vec::new(), Vec::new()));
 
     world.add_source_deck(
         "Draw pile".to_string(),
         DeckVisibility::new(
-            true, world.get_players().names().clone(), world.get_players().teams().clone()
+            true, false, world.get_players().names().clone(), world.get_players().teams().clone()
         )
     );
 
@@ -43,7 +46,7 @@ fn main() {
     world.add_deck(
         "bip's hand".to_string(),
         DeckVisibility::new(
-            false, vec!["bip".to_string()], vec![0]
+            false, false, vec!["bip".to_string()], vec![0]
         )
     );
 
@@ -52,4 +55,14 @@ fn main() {
     print_all_decks(&world, &world.get_players().get_player(0));
 
     print_all_decks(&world, &world.get_players().get_player(1));
+
+    let mut bindings = VarBindSet::new();
+    bindings.insert_str_var(&String::from("b"), String::from("bip"));
+    println!("\n{}", &bindings.get_str_val(&"b".to_string()).unwrap());
+    let eval = EvaluatableString::new(&String::from("[b]'s hand"));
+    println!("{} {:?} {:?}", eval.var_first, eval.non_var_slices, eval.var_slices);
+    println!("\ne: {}\n", eval.evaluate(&bindings, &world));
+
+    let b = eval.evaluate(&bindings, &world);
+    print_deck(&b, world.get_deck(&b).unwrap(), &world.get_players().get_player(0), world.get_card_set_data());
 }
