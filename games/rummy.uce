@@ -14,42 +14,44 @@ STATES {
     }
 
     MAIN {
-        FORPLAYER {
-            CHOOSE EITHER {
-                "Draw from draw pile" {
-                    DEAL "Draw pile" "[THISPLAYER]'s hand" 1
-                }
-
-                "Draw from discard pile" {
-                    DEAL "Discard pile" "[THISPLAYER]'s hand" 1
-                }
-            }
-
-            CHOOSE ANY {
-                "Meld" POSTCOND {
-                    CONDDECK "Meld #" {
-                        SAMESUITS
-                        CONSVALS
+        LOOP {
+            FORPLAYER {
+                CHOOSE EITHER {
+                    "Draw from draw pile" {
+                        DEAL "Draw pile" "[THISPLAYER]'s hand" 1
                     }
-                } {
-                    NEWDECK "Meld #" AD UNOWNED
-                    DEAL "[THISPLAYER]'s hand" "Meld #" 3
-                }
 
-                "Lay off" POSTCOND {
-                    CONDDECK "Meld #" {
-                        SAMESUITS
-                        CONSVALS
+                    "Draw from discard pile" {
+                        DEAL "Discard pile" "[THISPLAYER]'s hand" 1
                     }
-                } {
-                    DEAL "[THISPLAYER]'s hand" "Meld #" N
                 }
-            }
 
-            IF CONDDECK "[THISPLAYER]'s hand" {
-                SIZE 0
-            } {
-                STATE SCORING {[WINPLAYER]=[THISPLAYER]}
+                CHOOSE ANY {
+                    "Meld" POSTCOND {
+                        CONDDECK "Meld [#]" {
+                            SAMESUITS
+                            CONSVALS
+                        }
+                    } {
+                        NEWDECK "Meld [#]" AD UNOWNED
+                        DEAL "[THISPLAYER]'s hand" "Meld [#]" 3
+                    }
+
+                    "Lay off" POSTCOND {
+                        CONDDECK "Meld [#]" {
+                            SAMESUITS
+                            CONSVALS
+                        }
+                    } {
+                        DEAL "[THISPLAYER]'s hand" "Meld [#]" N
+                    }
+                }
+
+                IF CONDDECK "[THISPLAYER]'s hand" {
+                    SIZE 0
+                } {
+                    STATE SCORING {[WINPLAYER]=[THISPLAYER]}
+                }
             }
         }
     }

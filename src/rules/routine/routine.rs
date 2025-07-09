@@ -1,9 +1,9 @@
 use crate::rules::{game::GameWorld, state::StateSwitchData, variable::VarBindSet};
 
 pub trait Routine {
-    fn execute (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData>;
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData>;
 
-    fn undo (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> ();
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> ();
 }
 
 pub struct SeqRoutine {
@@ -19,8 +19,8 @@ impl SeqRoutine {
 }
 
 impl Routine for SeqRoutine {
-    fn execute (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
-        for r in self.routine.iter() {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
+        for r in self.routine.iter_mut() {
             if let Some(ssd) = r.execute(&bindings.clone(), game_world) {
                 return Some(ssd);
             }
@@ -29,8 +29,8 @@ impl Routine for SeqRoutine {
         None
     }
 
-    fn undo (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
-        for r in self.routine.iter().rev() {
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+        for r in self.routine.iter_mut().rev() {
             r.undo(&bindings.clone(), game_world);
         }
     }

@@ -11,10 +11,12 @@ impl ForPlayerRoutine {
 }
 
 impl Routine for ForPlayerRoutine {
-    fn execute (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
         let players = game_world.get_players().clone();
         for i in 0..players.num_players() {
-            let player = players.get_player(i);
+            let player = players.get_player_by_idx(i).unwrap();
+
+            println!("\n-- {}'s Turn --\n", player.name());
 
             let mut new_bindings = bindings.clone();
             new_bindings.insert_str_var(&String::from("THISPLAYER"), player.name().clone());
@@ -27,10 +29,10 @@ impl Routine for ForPlayerRoutine {
         None
     }
 
-    fn undo (&self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
         let players = game_world.get_players().clone();
         for i in 0..players.num_players() {
-            let player = players.get_player(i);
+            let player = players.get_player_by_idx(i).unwrap();
 
             let mut new_bindings = bindings.clone();
             new_bindings.insert_str_var(&String::from("THISPLAYER"), player.name().clone());

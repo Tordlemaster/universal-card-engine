@@ -36,11 +36,17 @@ impl VarBindSet {
 
     ///Look up the value of an existing int variable
     pub fn get_int_val (&self, name: &String) -> Option<&usize> {
-        self.int_contents.get(name)
+        //if name=="#" {
+            //"How many?"
+        //}
+        //else {
+            self.int_contents.get(name)
+        //}
     }
 
     //Look up the value of an existing variable
     pub fn get_str_val (&self, name: &String) -> Option<&String> {
+        //println!("Looking for variable {}", name);
         self.str_contents.get(name)
     }
 }

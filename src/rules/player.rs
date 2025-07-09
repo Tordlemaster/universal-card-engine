@@ -58,8 +58,26 @@ impl PlayerSet {
         self.players.len()
     }
 
-    pub fn get_player(&self, idx: usize) -> Player {
-        Player { name: self.names[idx].clone(), team: self.teams[idx] }
+    pub fn get_player_by_idx(&self, idx: usize) -> Option<Player> {
+        if idx >= 0 && idx < self.players.len() {
+            let p = &self.players[idx];
+            Some(Player { name: self.names[p.name_idx].clone(), team: self.teams[p.team_idx] })
+        }
+        else {
+            None
+        }
+    }
+    pub fn get_player_by_name(&self, s: &String) -> Option<Player> {
+        let name_idx = self.names.iter().position(|x| x==s)?;
+        let idx = self.players.iter().position(|x| x.name_idx==name_idx)?;
+
+        if idx >= 0 && idx < self.players.len() {
+            let p = &self.players[idx];
+            Some(Player { name: self.names[p.name_idx].clone(), team: self.teams[p.team_idx] })
+        }
+        else {
+            None
+        }
     }
 }
 
