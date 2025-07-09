@@ -15,7 +15,8 @@ impl CreateDeckRoutine {
 
 impl Routine for CreateDeckRoutine {
     fn execute (&mut self, bindings: &VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> Option<StateSwitchData> {
-        let name = self.name.evaluate(&bindings, game_world);
+        let name = self.name.evaluate_create(&bindings, game_world);
+        //println!("Creating deck '{}'", &name);
         let visibility = self.visibility.evaluate(&bindings, game_world);
         game_world.add_deck(name, visibility);
 
@@ -23,6 +24,7 @@ impl Routine for CreateDeckRoutine {
     }
     fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
         let name = self.name.evaluate(&bindings, game_world);
+        //println!("Removing deck '{}'", &name);
         game_world.remove_deck(&name);
     }
 }
@@ -40,7 +42,7 @@ impl CreateSourceDeckRoutine {
 
 impl Routine for CreateSourceDeckRoutine {
     fn execute (&mut self, bindings: &VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> Option<StateSwitchData> {
-        let name = self.name.evaluate(&bindings, game_world);
+        let name = self.name.evaluate_create(&bindings, game_world);
         let visibility = self.visibility.evaluate(&bindings, game_world);
         game_world.add_source_deck(name, visibility);
 
@@ -116,7 +118,7 @@ pub struct DealSpecificRoutine {
     source: EvaluatableString,
     dest: EvaluatableString,
     n: ChoiceLimit,
-    ///The indi
+    ///The indices of the cards dealt in the last call of execute(), for use in undo()
     exec_idcs: Vec<usize>
 }
 
@@ -129,6 +131,7 @@ impl DealSpecificRoutine {
 impl Routine for DealSpecificRoutine {
     fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
         //TODO TODO TODO TODO
+        //println!("Executing DealSpecificRoutine");
         let source_name = self.source.evaluate(bindings, game_world);
         let source_deck = game_world.get_deck(&source_name).expect("Script error: deck not found");
         let v = card_subset_interface(source_deck, &source_name, self.n, game_world.get_card_set_data());
@@ -153,9 +156,10 @@ impl Routine for DealSpecificRoutine {
         None
     }
     fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+        //println!("Undoing DealSpecificRoutine");
         let dest_name = self.dest.evaluate(bindings, game_world);
-        let dest_deck = game_world.get_deck(&dest_name).expect("Script error: deck not found");
-        let mut l = dest_deck.len()-1;
+        let dest_deck = game_world.get_deck(&dest_name).expect(format!("Script error: deck {} not found", dest_name).as_str());
+        let mut l = dest_deck.len();
         for idx in self.exec_idcs.iter().rev() {
             l -= 1;
             if let Err(n_dealt) = game_world.deal_idx(&self.dest.evaluate(bindings, game_world), &self.source.evaluate(bindings, game_world), l) {

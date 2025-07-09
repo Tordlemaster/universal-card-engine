@@ -1,4 +1,4 @@
-use crate::rules::{conditional::{conditional::{ConditionalMode, MultiConditional, TrueConditional}, deck_conditional::{DeckConditional, DeckSuitsComp, DeckSuitsConditional, DeckValsComp, DeckValsConditional}}, deck::{CardAttr, CardSetData}, game::{Game, GameWorld}, player::Player, routine::{choice_routine::{Choice, ChoiceLimit, ChoicesRoutine}, cond_routine::{CondRoutine, CondRoutineMode}, evaluatables::{DeckVisibilityEvaluatable, EvaluatableString}, iter_routine::ForPlayerRoutine, primitives::{CreateDeckRoutine, CreateSourceDeckRoutine, DealRandRoutine, LoopRoutine, PrintDecksRoutine, StateSwitchRoutine}, routine::SeqRoutine}, state::{State, StateSet}, variable::VarBindSet};
+use crate::rules::{conditional::{conditional::{ConditionalMode, MultiConditional, TrueConditional}, deck_conditional::{DeckConditional, DeckSuitsComp, DeckSuitsConditional, DeckValsComp, DeckValsConditional}}, deck::{CardAttr, CardSetData}, game::{Game, GameWorld}, player::Player, routine::{choice_routine::{Choice, ChoiceLimit, ChoicesRoutine}, cond_routine::{CondRoutine, CondRoutineMode}, evaluatables::{DeckVisibilityEvaluatable, EvaluatableString}, iter_routine::ForPlayerRoutine, primitives::{CreateDeckRoutine, CreateSourceDeckRoutine, DealRandRoutine, DealSpecificRoutine, LoopRoutine, PrintDecksRoutine, StateSwitchRoutine}, routine::SeqRoutine}, state::{State, StateSet}, variable::VarBindSet};
 
 pub fn rummy() -> Game {
     let game = Game::new(
@@ -35,7 +35,7 @@ pub fn rummy() -> Game {
                         Box::new(CreateDeckRoutine::new(&"Discard pile".to_string(), DeckVisibilityEvaluatable::new(true, true, Vec::new(), Vec::new()))),
                         Box::new(ForPlayerRoutine::new(
                             Box::new(SeqRoutine::new(vec![
-                                Box::new(CreateDeckRoutine::new(&"[THISPLAYER]'s hand".to_string(), DeckVisibilityEvaluatable::new(false, false, vec!["[THISPLAYER]".to_string()], Vec::new()))),
+                                Box::new(CreateSourceDeckRoutine::new(&"[THISPLAYER]'s hand".to_string(), DeckVisibilityEvaluatable::new(false, false, vec!["[THISPLAYER]".to_string()], Vec::new()))),
                                 Box::new(DealRandRoutine::new(&"Draw pile".to_string(), &"[THISPLAYER]'s hand".to_string(), 10))
                             ]))
                         )),
@@ -86,8 +86,8 @@ pub fn rummy() -> Game {
                                                         ConditionalMode::And
                                                     )),
                                                     Box::new(SeqRoutine::new(vec![
-                                                        Box::new(CreateDeckRoutine::new(&"Meld [#]".to_string(), DeckVisibilityEvaluatable::new(false, false, vec!["[THISPLAYER]".to_string()], Vec::new()))),
-                                                        Box::new(DealRandRoutine::new(&"[THISPLAYER]'s hand".to_string(), &"Meld [#]".to_string(), 3))
+                                                        Box::new(CreateDeckRoutine::new(&"Meld [#]".to_string(), DeckVisibilityEvaluatable::new(false, true, Vec::new(), Vec::new()))),
+                                                        Box::new(DealSpecificRoutine::new(&"[THISPLAYER]'s hand".to_string(), &"Meld [#]".to_string(), ChoiceLimit::Limited(3)))
                                                     ])),
                                                     CondRoutineMode::PostCond
                                                 )

@@ -44,7 +44,6 @@ impl CondRoutine {
             CondRoutineMode::PostCond => {
                 let ret = CondRoutineReturn::Success(self.routine.execute(bindings, game_world));
                 if !self.cond.evaluate(bindings, game_world) {
-                    self.routine.undo(bindings, game_world);
                     return CondRoutineReturn::Failure("Failed to meet the action's conditions".to_string());
                 }
                 else {

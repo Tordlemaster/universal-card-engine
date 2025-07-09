@@ -59,8 +59,8 @@ pub fn card_subset_interface(deck: &Deck, deck_name: &String, n: ChoiceLimit, ca
     match n {
         ChoiceLimit::Limited(n) => {
             println!("Select {} cards from {} by typing their indices separated by spaces:", n, deck_name);
-            for c in deck.cards() {
-                print!("{} ", card_to_str(c, card_set_data));
+            for i in 0..deck.cards().len() {
+                print!("({}) {}  ", i, card_to_str(&deck.cards()[i], card_set_data));
             }
             println!();
             
