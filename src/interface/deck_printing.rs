@@ -27,7 +27,7 @@ pub fn print_deck(deck_name: &String, deck: &Deck, player: &Player, card_set_dat
                 false => {
                     //Card names separated by spaces
                     for card in deck.cards() {
-                        print!("{} ", card_to_str(card, card_set_data));
+                        print!("{}  ", card_to_str(card, card_set_data));
                     }
                     println!("");
                 }

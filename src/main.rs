@@ -77,7 +77,7 @@ fn test() {
 }
 
 fn main() {
-    if false {
+    if true {
         let mut g = test_rummy::rummy();
         g.launch();
         print_all_decks(&g.world(), &g.world().get_players().get_player_by_idx(0).unwrap());

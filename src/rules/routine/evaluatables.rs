@@ -57,7 +57,19 @@ impl EvaluatableString {
 
         es
     }
+
+    //Evaluate the variables in the string and return the assembled result. This is for when a new object is NOT being created with '#'.
     pub fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld) -> String {
+        self._evaluate(bindings, game_world, false)
+    }
+
+    //Evaluate the variables in the string and return the assembled result. This is for when a new object IS being created with '#'.
+    pub fn evaluate_create(&self, bindings: &VarBindSet, game_world: &GameWorld) -> String {
+        self._evaluate(bindings, game_world, true)
+    }
+
+    ///pound_create describes whether you are using a pound variable to create a deck or just find an existing deck, as that will change its behavior.
+    fn _evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld, pound_create: bool) -> String {
         let mut n = 0;
         let mut s_start = String::new();
         let mut s_end = String::new();
@@ -91,13 +103,14 @@ impl EvaluatableString {
         }
 
         if has_seen_pound {
-            if let Some(pound_value) = bindings.get_str_val(&s_pound) {
-                s_start.push_str(&pound_value);
+            if pound_create {
+                //We are creating a new deck with pound, so it should be assigned the value of max + 1.
+                s_start.push_str(&(EvaluatableString::pattern_match(s_start.as_str(), s_end.as_str(), bindings, game_world) + 1).to_string());
                 s_start.push_str(&s_end);
             }
             else {
-                //Pattern-match on the deck names and increase the value by one
-                s_start.push_str(&EvaluatableString::pattern_match(s_start.as_str(), s_end.as_str(), bindings, game_world).to_string());
+                //We are finding an existing deck with pound, so it should be assigned the value of max.
+                s_start.push_str(&(EvaluatableString::pattern_match(s_start.as_str(), s_end.as_str(), bindings, game_world)).to_string());
                 s_start.push_str(&s_end);
             }
         }
@@ -106,18 +119,29 @@ impl EvaluatableString {
     }
     ///Returns 1 plus the value found by pattern matching deck names for the pound variable's position
     fn pattern_match(start: &str, end: &str, bindings: &VarBindSet, game_world: &GameWorld) -> usize {
-        for (deck_name, _) in game_world.get_decks() {
+        //println!("PATTERN MATCH start: '{}'  end: '{}'", start, end);
+        //println!("PATTERN MATCH deck names: {:?}", game_world.get_decks().map(|(n, d)| n).collect::<Vec<&String>>());
+        match game_world.get_decks()
+            .map(|(n, d)| n)
+            .filter(|n| n.starts_with(start) && n.ends_with(end))
+            .map(|n| n[start.len()..n.len()-end.len()].parse::<usize>().expect("# variable not a usize"))
+            .max()
+        {
+            Some(val) => val,
+            None => 0
+        }
+        /*for (deck_name, _) in game_world.get_decks() {
             if deck_name.len() > start.len() + end.len() {
                 if deck_name.starts_with(start) && deck_name.ends_with(end) {
                     let val = &deck_name[start.len()..deck_name.len()-end.len()];
-                    let new_val = (val.parse::<usize>().expect("# variable not a usize") + 1);
+                    let new_val = (val.parse::<usize>().expect("# variable not a usize"));
 
                     return new_val;
                 }
             }
         }
         //We are creating the first name that follows the pattern
-        1
+        1*/
     }
 }
 
