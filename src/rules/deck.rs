@@ -109,10 +109,21 @@ impl Deck {
         &self.visibility.teams_visible
     }
 
-
+    ///Draw a random card
     pub fn draw_card(&mut self) -> Option<Card> {
         if self.cards.len() > 0 {
             Some(self.cards.remove(random_range(0..self.cards.len())))
+        }
+        else {
+            None
+        }
+    }
+
+
+    ///Draw card at index idx
+    pub fn draw_card_idx(&mut self, idx: usize) -> Option<Card> {
+        if self.cards.len() > 0 {
+            Some(self.cards.remove(idx))
         }
         else {
             None

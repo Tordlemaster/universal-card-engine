@@ -6,6 +6,7 @@ pub fn print_all_decks(game_world: &GameWorld, player: &Player) {
     println!();
     for (deck_name, deck) in game_world.get_decks() {
         print_deck(deck_name, deck, player, game_world.get_card_set_data());
+        println!();
     }
 }
 
@@ -41,6 +42,6 @@ pub fn print_deck(deck_name: &String, deck: &Deck, player: &Player, card_set_dat
     }
 }
 
-fn card_to_str(card: &Card, card_set_data: &CardSetData) -> String {
+pub fn card_to_str(card: &Card, card_set_data: &CardSetData) -> String {
     format!("{} of {}", card_set_data.value_names[card.get_value()].name, card_set_data.suit_names[card.get_suit()].name)
 }

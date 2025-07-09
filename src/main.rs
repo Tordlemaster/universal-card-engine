@@ -1,4 +1,4 @@
-use crate::{interface::deck_printing::{print_all_decks, print_deck}, rules::{deck::{CardAttr, CardSetData, DeckVisibility}, game::GameWorld, player::Player, routine::evaluatables::EvaluatableString, state::StateSet, variable::VarBindSet}};
+use crate::{interface::deck_printing::{print_all_decks, print_deck}, rules::{deck::{CardAttr, CardSetData, DeckVisibility}, game::{Game, GameWorld}, player::Player, routine::evaluatables::EvaluatableString, state::StateSet, variable::VarBindSet}};
 
 pub mod rules;
 pub mod interface;
@@ -6,7 +6,7 @@ pub mod script;
 
 mod test_rummy;
 
-fn main() {
+fn test() {
     let players = vec![Player::new("bip".to_string(), 0), Player::new("bop".to_string(), 1)];
 
     let card_set_data = CardSetData::new(
@@ -32,7 +32,7 @@ fn main() {
         ],
         1
     );
-    let mut world = GameWorld::new(players, card_set_data, StateSet::new(Vec::new(), Vec::new()));
+    let mut world = Game::new(players, card_set_data, StateSet::new(Vec::new(), Vec::new()));
 
     world.add_source_deck(
         "Draw pile".to_string(),
@@ -41,7 +41,7 @@ fn main() {
         )
     );
 
-    print_all_decks(&world, &world.get_players().get_player(0));
+    print_all_decks(&world.world(), &world.get_players().get_player_by_idx(0).unwrap());
 
     world.add_deck(
         "bip's hand".to_string(),
@@ -52,17 +52,37 @@ fn main() {
 
     world.deal(&"Draw pile".to_string(), &"bip's hand".to_string(), 3);
 
-    print_all_decks(&world, &world.get_players().get_player(0));
+    print_all_decks(&world.world(), &world.get_players().get_player_by_idx(0).unwrap());
 
-    print_all_decks(&world, &world.get_players().get_player(1));
+    print_all_decks(&world.world(), &world.get_players().get_player_by_idx(0).unwrap());
 
     let mut bindings = VarBindSet::new();
     bindings.insert_str_var(&String::from("b"), String::from("bip"));
     println!("\n{}", &bindings.get_str_val(&"b".to_string()).unwrap());
     let eval = EvaluatableString::new(&String::from("[b]'s hand"));
     println!("{} {:?} {:?}", eval.var_first, eval.non_var_slices, eval.var_slices);
-    println!("\ne: {}\n", eval.evaluate(&bindings, &world));
+    println!("\ne: {}\n", eval.evaluate(&bindings, &world.world()));
 
-    let b = eval.evaluate(&bindings, &world);
-    print_deck(&b, world.get_deck(&b).unwrap(), &world.get_players().get_player(0), world.get_card_set_data());
+    let b = eval.evaluate(&bindings, &world.world());
+    print_deck(&b, world.get_deck(&b).unwrap(), &world.get_players().get_player_by_idx(0).unwrap(), world.get_card_set_data());
+
+    let pound1 = EvaluatableString::new(&String::from("Meld [#]"));
+    world.add_deck(pound1.evaluate(&bindings, &world.world()), DeckVisibility::new(false, true, Vec::new(), Vec::new()));
+
+    print_all_decks(&world.world(), &world.get_players().get_player_by_idx(0).unwrap());
+
+    world.add_deck(pound1.evaluate(&bindings, &world.world()), DeckVisibility::new(false, true, Vec::new(), Vec::new()));
+
+    print_all_decks(&world.world(), &world.get_players().get_player_by_idx(0).unwrap());
+}
+
+fn main() {
+    if false {
+        let mut g = test_rummy::rummy();
+        g.launch();
+        print_all_decks(&g.world(), &g.world().get_players().get_player_by_idx(0).unwrap());
+    }
+    else {
+        test();
+    }
 }

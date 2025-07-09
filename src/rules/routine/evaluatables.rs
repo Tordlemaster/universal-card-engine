@@ -78,8 +78,10 @@ impl EvaluatableString {
                     s_active = &mut s_end;
                     s_pound.push_str(v);
                 }
+                else {
                 //println!("Pushing var {}: {}", i/2, self.non_var_slices[i/2].as_str());
-                s_active.push_str(bindings.get_str_val(v).expect("Script error: variable not found").as_str());
+                    s_active.push_str(bindings.get_str_val(v).expect("Script error: variable not found").as_str());
+                }
             }
             else {
                 //println!("Pushing non-var {}: {}", i/2, self.non_var_slices[i/2].as_str());
@@ -116,6 +118,16 @@ impl EvaluatableString {
         }
         //We are creating the first name that follows the pattern
         1
+    }
+}
+
+pub struct EvaluatableStringUInt {
+    e: EvaluatableString
+}
+
+impl EvaluatableStringUInt {
+    pub fn new(s: &String) -> EvaluatableStringUInt {
+        EvaluatableStringUInt { e: EvaluatableString::new(s) }
     }
 }
 

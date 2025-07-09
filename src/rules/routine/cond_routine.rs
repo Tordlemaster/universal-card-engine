@@ -31,7 +31,7 @@ impl CondRoutine {
         CondRoutine { cond: Box::new(TrueConditional), routine: routine, mode: CondRoutineMode::PostCond }
     }
 
-    pub fn execute (&self, bindings: &crate::rules::variable::VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> CondRoutineReturn {
+    pub fn execute (&mut self, bindings: &crate::rules::variable::VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> CondRoutineReturn {
         match self.mode {
             CondRoutineMode::PreCond => {
                 if self.cond.evaluate(bindings, game_world) {
@@ -53,7 +53,7 @@ impl CondRoutine {
             }
         }
     }
-    pub fn undo (&self, bindings: &crate::rules::variable::VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> () {
+    pub fn undo (&mut self, bindings: &crate::rules::variable::VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> () {
         self.routine.undo(bindings, game_world);
         //TODO??
     }
