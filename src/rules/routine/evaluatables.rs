@@ -1,4 +1,4 @@
-use crate::rules::{deck::DeckVisibility, game::GameWorld, variable::VarBindSet};
+use crate::{interface::interface::take_input_line, rules::{deck::DeckVisibility, game::GameWorld, variable::{TempVars, VarBindSet}}};
 
 pub struct EvaluatableString {
     base: String,
@@ -59,17 +59,17 @@ impl EvaluatableString {
     }
 
     //Evaluate the variables in the string and return the assembled result. This is for when a new object is NOT being created with '#'.
-    pub fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld) -> String {
-        self._evaluate(bindings, game_world, false)
+    pub fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld, choice_var: &mut TempVars) -> String {
+        self._evaluate(bindings, game_world, choice_var, false)
     }
 
     //Evaluate the variables in the string and return the assembled result. This is for when a new object IS being created with '#'.
-    pub fn evaluate_create(&self, bindings: &VarBindSet, game_world: &GameWorld) -> String {
-        self._evaluate(bindings, game_world, true)
+    pub fn evaluate_create(&self, bindings: &VarBindSet, game_world: &GameWorld, choice_var: &mut TempVars) -> String {
+        self._evaluate(bindings, game_world, choice_var, true)
     }
 
     ///pound_create describes whether you are using a pound variable to create a deck or just find an existing deck, as that will change its behavior.
-    fn _evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld, pound_create: bool) -> String {
+    fn _evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld, choice_var: &mut TempVars, pound_create: bool) -> String {
         let mut n = 0;
         let mut s_start = String::new();
         let mut s_end = String::new();
@@ -82,7 +82,21 @@ impl EvaluatableString {
         for i in 0..(self.var_slices.len() + self.non_var_slices.len()) {
             if use_var {
                 let v = &self.var_slices[i/2];
-                if v.as_bytes()[0] == b'#' {
+                if v == "N" {
+                    //Choice variable; prompt user for the value
+                    match choice_var.get_n() {
+                        Some(s) => {
+                            s_active.push_str(s);
+                        }
+                        None => {
+                            println!("Which one?");
+                            let s = take_input_line();
+                            choice_var.set_n(&s);
+                            s_active.push_str(&s);
+                        }
+                    }
+                }
+                else if v.as_bytes()[0] == b'#' {
                     if has_seen_pound {
                         panic!("Script error: no more than one variable beginning with '#' is permitted in each string")
                     }
@@ -171,11 +185,11 @@ impl DeckVisibilityEvaluatable {
             teams_visible: Vec::new()//teams_visible.iter().map(|x| EvaluatableString::new(x)).collect()
         }
     }
-    pub fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld) -> DeckVisibility {
+    pub fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld, choice_vars: &mut TempVars) -> DeckVisibility {
         DeckVisibility::new(
             self.stack,
             self.visible_to_all,
-            self.players_visible.iter().map(|e| e.evaluate(bindings, game_world)).collect(),
+            self.players_visible.iter().map(|e| e.evaluate(bindings, game_world, choice_vars)).collect(),
             Vec::new() //TODO self.teams_visible.iter().map(|e| e.evaluate(bindings, game_world)).collect()
         )
     }
@@ -189,11 +203,11 @@ impl VarBindSetEvaluatable {
     pub fn new(vars: Vec<(String, String)>) -> VarBindSetEvaluatable {
         VarBindSetEvaluatable { vars: vars.iter().map(|(n, v)| (n.clone(), EvaluatableString::new(v))).collect() }
     }
-    pub fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld) -> VarBindSet {
+    pub fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld, choice_vars: &mut TempVars) -> VarBindSet {
         let mut new_bindings = VarBindSet::new();
 
         for (name, value) in &self.vars {
-            new_bindings.insert_str_var(name, value.evaluate(bindings, game_world));
+            new_bindings.insert_str_var(name, value.evaluate(bindings, game_world, choice_vars));
         }
 
         new_bindings

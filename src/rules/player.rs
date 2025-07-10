@@ -46,6 +46,10 @@ impl PlayerSet {
         player_set
     }
 
+    pub fn players_iter(&self) -> impl Iterator<Item = Player> {
+        self.players.iter().map(|i| Player { name: self.names[i.name_idx].clone(), team: self.teams[i.team_idx] })
+    }
+
     pub fn names(&self) -> &Vec<String> {
         &self.names
     }

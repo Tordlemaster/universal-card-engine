@@ -1,4 +1,4 @@
-use crate::{interface::{deck_printing::print_all_decks, interface::card_subset_interface}, rules::{deck::DeckVisibility, game::GameWorld, routine::{choice_routine::ChoiceLimit, evaluatables::{DeckVisibilityEvaluatable, EvaluatableString, VarBindSetEvaluatable}}, state::StateSwitchData, variable::VarBindSet}};
+use crate::{interface::{deck_printing::print_all_decks, interface::card_subset_interface}, rules::{deck::DeckVisibility, game::GameWorld, routine::{choice_routine::ChoiceLimit, evaluatables::{DeckVisibilityEvaluatable, EvaluatableString, VarBindSetEvaluatable}}, state::StateSwitchData, variable::{TempVars, VarBindSet}}};
 
 use super::routine::*;
 
@@ -14,16 +14,16 @@ impl CreateDeckRoutine {
 }
 
 impl Routine for CreateDeckRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> Option<StateSwitchData> {
-        let name = self.name.evaluate_create(&bindings, game_world);
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        let name = self.name.evaluate_create(&bindings, game_world, choice_vars);
         //println!("Creating deck '{}'", &name);
-        let visibility = self.visibility.evaluate(&bindings, game_world);
+        let visibility = self.visibility.evaluate(&bindings, game_world, choice_vars);
         game_world.add_deck(name, visibility);
 
         None
     }
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
-        let name = self.name.evaluate(&bindings, game_world);
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
+        let name = self.name.evaluate(&bindings, game_world, choice_vars);
         //println!("Removing deck '{}'", &name);
         game_world.remove_deck(&name);
     }
@@ -41,15 +41,15 @@ impl CreateSourceDeckRoutine {
 }
 
 impl Routine for CreateSourceDeckRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> Option<StateSwitchData> {
-        let name = self.name.evaluate_create(&bindings, game_world);
-        let visibility = self.visibility.evaluate(&bindings, game_world);
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        let name = self.name.evaluate_create(&bindings, game_world, choice_vars);
+        let visibility = self.visibility.evaluate(&bindings, game_world, choice_vars);
         game_world.add_source_deck(name, visibility);
 
         None
     }
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
-        let name = self.name.evaluate(&bindings, game_world);
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
+        let name = self.name.evaluate(&bindings, game_world, choice_vars);
         game_world.remove_deck(&name);
     }
 }
@@ -66,19 +66,19 @@ impl RemoveDeckRoutine {
 }
 
 impl Routine for RemoveDeckRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
-        let name = self.name.evaluate(bindings, game_world);
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        let name = self.name.evaluate(bindings, game_world, choice_vars);
         if let Some(deck) = game_world.get_deck(&name) {
             //self.visibility = Some(deck.visibility().clone());
         }
-        game_world.remove_deck(&self.name.evaluate(bindings, game_world));
+        game_world.remove_deck(&self.name.evaluate(bindings, game_world, choice_vars));
         //TODO make sure that if self.visibility is not None when trying to 
         //TODO TODO self.visibility and all instances of Routines storing internal state is dangerous
         //because it will be hard to maintain the internal state over game loops
         None
     }
 
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
         //TODO
     }
 }
@@ -97,17 +97,45 @@ impl DealRandRoutine {
 }
 
 impl Routine for DealRandRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
-        if let Err(n_dealt) = game_world.deal(&self.source.evaluate(bindings, game_world), &self.dest.evaluate(bindings, game_world), self.n) {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        if let Err(n_dealt) = game_world.deal(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), self.n) {
             //TODO replace panic with a real action
-            panic!("Tried to draw from an empty deck {}!", self.source.evaluate(bindings, game_world));
+            panic!("Tried to draw from an empty deck {}!", self.source.evaluate(bindings, game_world, choice_vars));
         }
         None
     }
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
-        if let Err(n_dealt) = game_world.deal(&self.source.evaluate(bindings, game_world), &self.dest.evaluate(bindings, game_world), self.n) {
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
+        if let Err(n_dealt) = game_world.deal(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), self.n) {
             //TODO replace panic with a real action
-            panic!("PROGRAM ERROR: Tried to undo a deal action and drew from an empty deck {}, meaning execute() did not deal all or any cards first!", self.source.evaluate(bindings, game_world));
+            panic!("PROGRAM ERROR: Tried to undo a deal action and drew from an empty deck {}, meaning execute() did not deal all or any cards first!", self.source.evaluate(bindings, game_world, choice_vars));
+        }
+    }
+}
+
+pub struct DealTopRoutine {
+    source: EvaluatableString,
+    dest: EvaluatableString,
+    n: usize
+}
+
+impl DealTopRoutine {
+    pub fn new(source: &String, dest: &String, n: usize) -> DealTopRoutine{
+        DealTopRoutine { source: EvaluatableString::new(source), dest: EvaluatableString::new(dest), n: n }
+    }
+}
+
+impl Routine for DealTopRoutine {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        if let Err(n_dealt) = game_world.deal_top(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), self.n) {
+            //TODO replace panic with a real action
+            panic!("Tried to draw from an empty deck {}!", self.source.evaluate(bindings, game_world, choice_vars));
+        }
+        None
+    }
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
+        if let Err(n_dealt) = game_world.deal_top(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), self.n) {
+            //TODO replace panic with a real action
+            panic!("PROGRAM ERROR: Tried to undo a deal action and drew from an empty deck {}, meaning execute() did not deal all or any cards first!", self.source.evaluate(bindings, game_world, choice_vars));
         }
     }
 }
@@ -129,10 +157,10 @@ impl DealSpecificRoutine {
 }
 
 impl Routine for DealSpecificRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
         //TODO TODO TODO TODO
         //println!("Executing DealSpecificRoutine");
-        let source_name = self.source.evaluate(bindings, game_world);
+        let source_name = self.source.evaluate(bindings, game_world, choice_vars);
         let source_deck = game_world.get_deck(&source_name).expect("Script error: deck not found");
         let v = card_subset_interface(source_deck, &source_name, self.n, game_world.get_card_set_data());
         
@@ -144,7 +172,7 @@ impl Routine for DealSpecificRoutine {
             let offset: usize = v[0..i].iter().map(|x| (*x < idx) as usize).sum();
             dealt_offset_indices.push(idx - offset);
             
-            if let Err(n_dealt) = game_world.deal_idx(&self.source.evaluate(bindings, game_world), &self.dest.evaluate(bindings, game_world), idx - offset) {
+            if let Err(n_dealt) = game_world.deal_idx(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), idx - offset) {
                 //TODO replace panic with a real action
                 self.exec_idcs = dealt_offset_indices;
                 panic!("Tried to draw from an empty deck {}!", source_name);
@@ -155,14 +183,14 @@ impl Routine for DealSpecificRoutine {
         
         None
     }
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
         //println!("Undoing DealSpecificRoutine");
-        let dest_name = self.dest.evaluate(bindings, game_world);
+        let dest_name = self.dest.evaluate(bindings, game_world, choice_vars);
         let dest_deck = game_world.get_deck(&dest_name).expect(format!("Script error: deck {} not found", dest_name).as_str());
         let mut l = dest_deck.len();
         for idx in self.exec_idcs.iter().rev() {
             l -= 1;
-            if let Err(n_dealt) = game_world.deal_idx(&self.dest.evaluate(bindings, game_world), &self.source.evaluate(bindings, game_world), l) {
+            if let Err(n_dealt) = game_world.deal_idx(&self.dest.evaluate(bindings, game_world, choice_vars), &self.source.evaluate(bindings, game_world, choice_vars), l) {
                 //TODO replace panic with a real action
                 panic!("undo() for DealSpecificRoutine failed");
             }
@@ -187,10 +215,10 @@ impl StateSwitchRoutine {
 }
 
 impl Routine for StateSwitchRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
-        Some(StateSwitchData::new(self.name.clone(), self.bindings.evaluate(bindings, game_world)))
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        Some(StateSwitchData::new(self.name.clone(), self.bindings.evaluate(bindings, game_world, choice_vars)))
     }
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
         panic!("Script error: tried to undo a state switch, which is not allowed");
     }
 }
@@ -206,11 +234,11 @@ impl PrintDecksRoutine {
 }
 
 impl Routine for PrintDecksRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
-        print_all_decks(game_world, &game_world.get_players().get_player_by_name(&self.var.evaluate(bindings, game_world)).unwrap());
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        print_all_decks(game_world, &game_world.get_players().get_player_by_name(&self.var.evaluate(bindings, game_world, choice_vars)).unwrap());
         None
     }
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {}
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {}
 }
 
 pub struct LoopRoutine {
@@ -224,14 +252,36 @@ impl LoopRoutine {
 }
 
 impl Routine for LoopRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
         loop {
-            if (self.routine.execute(bindings, game_world)).is_none() {
-                return None;
+            let ret = self.routine.execute(bindings, game_world, choice_vars);
+            
+            if ret.is_some() {
+                return ret;
             }
         }
     }
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
+        
+    }
+}
+
+pub struct PrintMsgRoutine {
+    msg: EvaluatableString
+}
+
+impl PrintMsgRoutine {
+    pub fn new(s: &String) -> PrintMsgRoutine {
+        PrintMsgRoutine { msg: EvaluatableString::new(s) }
+    }
+}
+
+impl Routine for PrintMsgRoutine {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        println!("{}", &self.msg.evaluate(bindings, game_world, choice_vars));
+        None
+    }
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
         
     }
 }
@@ -245,10 +295,10 @@ impl NullRoutine {
 }
 
 impl Routine for NullRoutine {
-    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> Option<StateSwitchData> {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
         None
     }
-    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld) -> () {
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
         
     }
 }

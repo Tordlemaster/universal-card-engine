@@ -19,7 +19,7 @@ pub fn print_deck(deck_name: &String, deck: &Deck, player: &Player, card_set_dat
             match deck.stack() {
                 true => {
                     //"Card on top name" + N more underneath
-                    print!("{}", card_to_str(deck.cards().iter().last().unwrap(), card_set_data));
+                    print!("{}", card_to_str(&deck.cards()[deck.len()-1], card_set_data));
                     if deck.len() > 1 {
                         println!(" + {} more underneath", deck.len() - 1);
                     }

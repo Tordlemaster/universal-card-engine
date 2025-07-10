@@ -50,3 +50,43 @@ impl VarBindSet {
         self.str_contents.get(name)
     }
 }
+
+///For passing # and N variables between the routines of a Choice and its conditions
+///TODO May cause issues with nested Choices
+pub struct TempVars {
+    pub pound: Option<String>,
+    pub n: Option<String>
+}
+
+impl TempVars {
+    pub const fn new() -> TempVars {
+        TempVars { pound: None, n: None }
+    }
+
+    pub fn get_pound(&self) -> &Option<String> {
+        &self.pound
+    }
+    pub fn set_pound(&mut self, s: &String) {
+        if self.pound.is_none() {
+            self.pound = Some(s.clone());
+        }
+        else {
+            panic!("Should not be setting TempVars when they are already set!")
+        }
+    }
+    pub fn get_n(&self) -> &Option<String> {
+        &self.n
+    }
+    pub fn set_n(&mut self, s: &String) {
+        if self.n.is_none() {
+            self.n = Some(s.clone());
+        }
+        else {
+            panic!("Should not be setting TempVars when they are already set!")
+        }
+    }
+    pub fn clear(&mut self) {
+        self.pound = None;
+        self.n = None;
+    }
+}

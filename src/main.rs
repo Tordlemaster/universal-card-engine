@@ -7,7 +7,7 @@ pub mod script;
 mod test_rummy;
 
 fn test() {
-    let players = vec![Player::new("bip".to_string(), 0), Player::new("bop".to_string(), 1)];
+    /*let players = vec![Player::new("bip".to_string(), 0), Player::new("bop".to_string(), 1)];
 
     let card_set_data = CardSetData::new(
         vec![
@@ -73,7 +73,7 @@ fn test() {
 
     world.add_deck(pound1.evaluate(&bindings, &world.world()), DeckVisibility::new(false, true, Vec::new(), Vec::new()));
 
-    print_all_decks(&world.world(), &world.get_players().get_player_by_idx(0).unwrap());
+    print_all_decks(&world.world(), &world.get_players().get_player_by_idx(0).unwrap());*/
 }
 
 fn main() {

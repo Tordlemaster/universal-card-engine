@@ -129,6 +129,9 @@ impl Deck {
             None
         }
     }
+    pub fn draw_card_top(&mut self) -> Option<Card> {
+        self.cards.pop()
+    }
     pub fn insert_card(&mut self, card: Card) {
         self.cards.push(card);
     }
