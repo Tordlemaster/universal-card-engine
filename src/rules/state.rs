@@ -39,7 +39,12 @@ impl StateSet {
                 next_state = cur_state.execute(next_state.bindings, game_world);
             }
             else {
-                panic!("Script error: no {} state found", next);
+                if next == "_END" {
+                    return;
+                }
+                else {
+                    panic!("Script error: no {} state found", next);
+                }
             }
         }
     }

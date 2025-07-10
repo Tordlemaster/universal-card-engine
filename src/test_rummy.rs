@@ -162,7 +162,8 @@ pub fn rummy() -> Game {
                             )),
                             Box::new(SeqRoutine::new(vec![
                             ]))
-                        ))*/
+                        )),*/
+                        Box::new(StateSwitchRoutine::new(String::from("_END"), Vec::new()))
                     ]))
                 ))
             ]
