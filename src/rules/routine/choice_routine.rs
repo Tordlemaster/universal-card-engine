@@ -1,4 +1,4 @@
-use crate::{interface::interface::choice_interface, rules::{conditional::conditional::TrueConditional, routine::{cond_routine::{CondRoutine, CondRoutineMode, CondRoutineReturn}, primitives::NullRoutine, routine::Routine}}};
+use crate::{interface::interface::choice_interface, rules::{conditional::conditional::TrueConditional, game::GameWorld, routine::{cond_routine::{CondRoutine, CondRoutineMode, CondRoutineReturn}, primitives::NullRoutine, routine::Routine}, state::StateSwitchData, variable::{TempVars, VarBindSet}}};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ChoiceLimit {
@@ -24,11 +24,11 @@ impl Choice {
         &self.name
     }
 
-    pub fn execute (&mut self, bindings: &crate::rules::variable::VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> CondRoutineReturn {
-        self.routine.execute(bindings, game_world)
+    pub fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> CondRoutineReturn {
+        self.routine.execute(bindings, game_world, choice_vars)
     }
-    pub fn undo (&mut self, bindings: &crate::rules::variable::VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> () {
-        self.routine.undo(bindings, game_world);
+    pub fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
+        self.routine.undo(bindings, game_world, choice_vars)
     }
 }
 
@@ -48,7 +48,7 @@ impl ChoicesRoutine {
 }
 
 impl Routine for ChoicesRoutine {
-    fn execute (&mut self, bindings: &crate::rules::variable::VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> Option<crate::rules::state::StateSwitchData> {
+    fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
         match self.mode {
             ChoiceLimit::Limited(limit) => {
                 for l in (1..=limit).rev() {
@@ -56,14 +56,15 @@ impl Routine for ChoicesRoutine {
                     while !success {
                         println!("Choose one of the following ({} of {} actions remaining):", l, limit);
                         let u = choice_interface(&self.choices);
-                        match self.choices[u].execute(bindings, game_world) {
+                        let mut temp_vars = TempVars::new();
+                        match self.choices[u].execute(bindings, game_world, &mut temp_vars) {
                             CondRoutineReturn::Success(a) => {
                                 success = true;
                                 return a;
                             },
                             CondRoutineReturn::Failure(a) => {
                                 println!("Condition for action not satisfied: {}\nPlease choose a different action.", a);
-                                self.choices[u].undo(bindings, game_world);
+                                self.choices[u].undo(bindings, game_world, &mut temp_vars);
                             }
                         }
                     }
@@ -74,14 +75,15 @@ impl Routine for ChoicesRoutine {
                 let mut stop = false;
                 while !stop {
                     let i = choice_interface(&self.choices);
-                    println!("i = {} choices.len() = {}", i, self.choices.len());
-                    if i == self.choices.len() {
+                    //println!("i = {} choices.len() = {}", i, self.choices.len());
+                    if i == self.choices.len() - 1 {
                         stop = true;
                     }
                     else {
                         let mut success = false;
                         while !success {
-                            match self.choices[i].execute(bindings, game_world) {
+                            let mut temp_vars = TempVars::new();
+                            match self.choices[i].execute(bindings, game_world, &mut temp_vars) {
                                 CondRoutineReturn::Success(a) => {
                                     success = true;
                                     if a.is_some() {
@@ -90,7 +92,7 @@ impl Routine for ChoicesRoutine {
                                 },
                                 CondRoutineReturn::Failure(a) => {
                                     println!("Condition for action not satisfied: {}\nPlease choose a different action.", a);
-                                    self.choices[i].undo(bindings, game_world);
+                                    self.choices[i].undo(bindings, game_world, &mut temp_vars);
                                 }
                             }
                         }
@@ -101,7 +103,7 @@ impl Routine for ChoicesRoutine {
 
         None
     }
-    fn undo (&mut self, bindings: &crate::rules::variable::VarBindSet, game_world: &mut crate::rules::game::GameWorld) -> () {
-        
+    fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
+        //TODO
     }
 }

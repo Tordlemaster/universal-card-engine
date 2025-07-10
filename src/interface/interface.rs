@@ -2,7 +2,7 @@ use std::{io::{stdin, stdout, Write}, num::ParseIntError};
 
 use crate::{interface::deck_printing::card_to_str, rules::{deck::{CardSetData, Deck}, routine::choice_routine::{Choice, ChoiceLimit}}};
 
-fn take_input_line() -> String {
+pub fn take_input_line() -> String {
     let mut s = String::new();
 
     //Print prompt
@@ -36,8 +36,9 @@ pub fn choice_interface(choices: &Vec<Choice>) -> usize {
             print!(" ");
         }
     }
-    print!("\n>"); //Prompt
-    stdout().flush();
+    println!();
+    //print!("\n>"); //Prompt
+    //stdout().flush();
 
     //Take user input
     let mut success = false;
@@ -91,8 +92,8 @@ pub fn card_subset_interface(deck: &Deck, deck_name: &String, n: ChoiceLimit, ca
         }
         ChoiceLimit::Unlimited => {
             println!("Select a subset of cards from {} by typing their indices separated by spaces:", deck_name);
-            for c in deck.cards() {
-                print!("{} ", card_to_str(c, card_set_data));
+            for i in 0..deck.cards().len() {
+                print!("({}) {}  ", i, card_to_str(&deck.cards()[i], card_set_data));
             }
             println!();
 

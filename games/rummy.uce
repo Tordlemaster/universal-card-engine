@@ -58,7 +58,9 @@ STATES {
 
     SCORING {
         FORPLAYERCOND {
-            NOT PLAYERNAME [WINPLAYER]
+            NOT PLAYERCOND {
+                PLAYERNAME [WINPLAYER]
+            }
         } {
             VARASSIGN [X] SCOREDECK "[THISPLAYER]'s hand" 
             SCORE ADD [THISPLAYER] [X]

@@ -14,7 +14,7 @@ impl State {
         State {routine: routine}
     }
     pub fn execute (&mut self, initial_bindings: VarBindSet, game_world: &mut GameWorld)  -> StateSwitchData {
-        self.routine.execute(&initial_bindings.clone(), game_world).unwrap()
+        self.routine.execute(&initial_bindings.clone(), game_world, &mut TempVars::new()).unwrap()
     }
 }
 

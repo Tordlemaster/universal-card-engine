@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use crate::rules::{conditional::conditional::{Conditional, ConditionalMode}, deck::Deck, routine::evaluatables::EvaluatableString, variable::VarBindSet};
+use crate::rules::{conditional::conditional::{Conditional, ConditionalMode}, deck::Deck, game::GameWorld, routine::evaluatables::EvaluatableString, variable::{TempVars, VarBindSet}};
 
 pub trait DeckConditionalElement {
     fn evaluate(&self, deck: &Deck) -> bool;
@@ -19,11 +19,12 @@ impl DeckConditional {
 }
 
 impl Conditional for DeckConditional {
-    fn evaluate(&self, bindings: &VarBindSet, game_world: &crate::rules::game::GameWorld) -> bool {
+    fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld, choice_vars: &mut TempVars) -> bool {
+        let deck = game_world.get_deck(&self.deck_name.evaluate(bindings, game_world, choice_vars)).unwrap();
         if self.mode == ConditionalMode::And {
             let mut result = true;
             for c in &self.conditions {
-                result = result && c.evaluate(game_world.get_deck(&self.deck_name.evaluate(bindings, game_world)).unwrap());
+                result = result && c.evaluate(deck);
                 if !result { //Short circuit AND when value becomes false
                     break;
                 }
@@ -32,8 +33,9 @@ impl Conditional for DeckConditional {
         }
         else {
             let mut result = false;
+
             for c in &self.conditions {
-                result = result || c.evaluate(game_world.get_deck(&self.deck_name.evaluate(bindings, game_world)).unwrap());
+                result = result || c.evaluate(deck);
                 if result { //Short circuit OR when value becomes true
                     break;
                 }
@@ -49,6 +51,12 @@ pub enum DeckLenComp {
 pub struct DeckLenConditional {
     len: usize,
     mode: DeckLenComp
+}
+
+impl DeckLenConditional {
+    pub fn new(len: usize, mode: DeckLenComp) -> DeckLenConditional {
+        DeckLenConditional { len: len, mode: mode }
+    }
 }
 
 impl DeckConditionalElement for DeckLenConditional {
