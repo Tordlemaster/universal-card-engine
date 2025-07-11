@@ -5,6 +5,18 @@ use crate::rules::{state::{StateSet, State}};
 grammar;
 
 pub States: StateSet = {
-    "STATES" <v: ("{" (<StateBody>)+ "}")> => v
+    "STATES" <v: ("{" (<StateDef>)+ "}")> => StateSet::new(v.iter().map(|s| s.0), v.iter().map(|s| s.1))
 };
+
+pub StateDef: (String, Box<State>) = {
+    <n: StateName> "{" <s: StateBody> "}" => (n, Box::new(State::new(s)))
+};
+
+pub StateName: String = {
+    <s: r"[A-Z]*"> => s
+};
+
+pub StateBody: Box<dyn Routine> = {
+    <Routine>
+}
 
