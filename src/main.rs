@@ -1,3 +1,5 @@
+use lalrpop_util::lalrpop_mod;
+
 use crate::{interface::deck_printing::{print_all_decks, print_deck}, rules::{deck::{CardAttr, CardSetData, DeckVisibility}, game::{Game, GameWorld}, player::Player, routine::evaluatables::EvaluatableString, state::StateSet, variable::VarBindSet}};
 
 pub mod rules;
@@ -5,6 +7,8 @@ pub mod interface;
 pub mod script;
 
 mod test_rummy;
+
+lalrpop_mod!(grammar);
 
 fn test() {
     /*let players = vec![Player::new("bip".to_string(), 0), Player::new("bop".to_string(), 1)];
