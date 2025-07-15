@@ -1,6 +1,6 @@
-use std::{io::{stdin, stdout, Write}, num::ParseIntError};
+use std::{io::{self, stdin, stdout, Write}, num::ParseIntError};
 
-use crate::{interface::deck_printing::card_to_str, rules::{deck::{CardSetData, Deck}, routine::choice_routine::{Choice, ChoiceLimit}}};
+use crate::{interface::deck_printing::{card_to_str, print_all_decks}, rules::{deck::{CardSetData, Deck}, game::GameWorld, routine::{choice_routine::{Choice, ChoiceLimit}, evaluatables::EvaluatableString}, variable::{TempVars, VarBindSet}}};
 
 pub fn take_input_line() -> String {
     let mut s = String::new();
@@ -126,4 +126,21 @@ pub fn card_subset_interface(deck: &Deck, deck_name: &String, n: ChoiceLimit, ca
 
 fn _csi(input: &String) -> Result<Vec<usize>, ParseIntError> {
     input.split_whitespace().map(|s| s.parse::<usize>()).collect()
+}
+
+pub fn print_game(bindings: &VarBindSet, game_world: &GameWorld, choice_var: &mut TempVars) {
+    static mut chars_printed_last_time: usize = 0;
+    let player_turn: EvaluatableString = EvaluatableString::new(&String::from("-- [THISPLAYER]'s Turn --"));
+    let mut out = io::stdout();
+
+    print!("\x1b[H\x1b[J");
+
+    unsafe{
+        //Clear previous game info
+        //for _ in 0..chars_printed_last_time {out.write("\u{8}".as_bytes());}
+
+        //Print new info
+        println!("{}", player_turn.evaluate(bindings, game_world, choice_var));
+        print_all_decks(game_world, &game_world.get_players().get_player_by_name(bindings.get_str_val(&String::from("THISPLAYER")).unwrap()).unwrap());
+    }
 }

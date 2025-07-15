@@ -1,4 +1,4 @@
-use crate::{interface::{deck_printing::print_all_decks, interface::card_subset_interface}, rules::{deck::DeckVisibility, game::GameWorld, routine::{choice_routine::ChoiceLimit, evaluatables::{DeckVisibilityEvaluatable, EvaluatableString, VarBindSetEvaluatable}}, state::StateSwitchData, variable::{TempVars, VarBindSet}}};
+use crate::{interface::{deck_printing::print_all_decks, interface::{card_subset_interface, print_game}}, rules::{deck::DeckVisibility, game::GameWorld, routine::{choice_routine::ChoiceLimit, evaluatables::{DeckVisibilityEvaluatable, EvaluatableString, VarBindSetEvaluatable}}, state::StateSwitchData, variable::{TempVars, VarBindSet}}};
 
 use super::routine::*;
 
@@ -158,6 +158,7 @@ impl DealChoiceRoutine {
 
 impl Routine for DealChoiceRoutine {
     fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        print_game(bindings, game_world, choice_vars);
         //TODO TODO TODO TODO
         //println!("Executing DealSpecificRoutine");
         let source_name = self.source.evaluate(bindings, game_world, choice_vars);

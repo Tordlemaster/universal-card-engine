@@ -16,7 +16,6 @@ STATES {
     "MAIN" {
         LOOP {
             FORPLAYER {
-                PRINTDECKS
 
                 CHOOSE 1 {
                     "Draw from draw pile" NOCOND {
@@ -27,8 +26,6 @@ STATES {
                         DEALRAND "Discard pile" "[THISPLAYER]'s hand" 1
                     }
                 }
-                
-                PRINTDECKS
 
                 CHOOSE {
                     "Create a new meld" POSTCOND OR {
@@ -44,7 +41,6 @@ STATES {
                     } {
                         NEWDECK "Meld [#]" AD1 [ ]
                         DEALCHOICE "[THISPLAYER]'s hand" "Meld [#]"
-                        PRINTDECKS
                     }
 
                     "Lay off to an existing meld" POSTCOND OR {
@@ -59,7 +55,6 @@ STATES {
                         }
                     } {
                         DEALCHOICE "[THISPLAYER]'s hand" "Meld [#]"
-                        PRINTDECKS
                     }
                 }
 
