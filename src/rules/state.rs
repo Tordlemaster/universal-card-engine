@@ -23,7 +23,7 @@ pub struct StateSet {
 }
 
 impl StateSet {
-    pub fn new(names: Vec<String>, mut states: Vec<Option<State>>) -> StateSet {
+    pub fn new(mut names: Vec<String>, mut states: Vec<&mut Option<State>>) -> StateSet {
         let mut states_map = HashMap::new();
         for i in 0..names.len() {
             states_map.insert(names[i].clone(), states[i].take().unwrap());

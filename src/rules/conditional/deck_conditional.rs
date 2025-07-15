@@ -108,7 +108,9 @@ impl DeckConditionalElement for DeckSuitsConditional {
 }
 
 pub enum DeckValsComp {
-    Same, Consecutive
+    Same,
+    ///Consecutive
+    Cons
 }
 
 pub struct DeckValsConditional {
@@ -139,7 +141,7 @@ impl DeckConditionalElement for DeckValsConditional {
                     true
                 }
             },
-            DeckValsComp::Consecutive => {
+            DeckValsComp::Cons => {
                 if deck.len() > 0 {
                     let mut min_val = usize::MAX;
                     let mut max_val = 0_usize;

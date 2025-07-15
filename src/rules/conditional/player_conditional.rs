@@ -7,18 +7,18 @@ pub trait PlayerConditionalElement {
 pub struct PlayerConditional {
     conditions: Vec<Box<dyn PlayerConditionalElement>>,
     mode: ConditionalMode,
-    player_name: EvaluatableString
+    player_var: EvaluatableString
 }
 
 impl PlayerConditional {
-    pub fn new(conditions: Vec<Box<dyn PlayerConditionalElement>>, mode: ConditionalMode, player_name: &String) -> PlayerConditional {
-        PlayerConditional { conditions: conditions, mode: mode, player_name: EvaluatableString::new(player_name) }
+    pub fn new(conditions: Vec<Box<dyn PlayerConditionalElement>>, mode: ConditionalMode, player_var: &String) -> PlayerConditional {
+        PlayerConditional { conditions: conditions, mode: mode, player_var: EvaluatableString::new(player_var) }
     }
 }
 
 impl Conditional for PlayerConditional {
     fn evaluate(&self, bindings: &VarBindSet, game_world: &GameWorld, choice_vars: &mut TempVars) -> bool {
-        let player = game_world.get_players().get_player_by_name(&self.player_name.evaluate(bindings, game_world, choice_vars)).unwrap();
+        let player = game_world.get_players().get_player_by_name(&self.player_var.evaluate(bindings, game_world, choice_vars)).unwrap();
         if self.mode == ConditionalMode::And {
             let mut result = true;
             for c in &self.conditions {

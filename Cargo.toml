@@ -3,9 +3,9 @@ name = "universal-card-engine"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-rand = "0.9.1"
-lalrpop-util = "0.22.2"
-
 [build-dependencies]
 lalrpop = "0.22.2"
+
+[dependencies]
+rand = "0.9.1"
+lalrpop-util = { version = "0.22.2", features = ["lexer", "unicode"] }

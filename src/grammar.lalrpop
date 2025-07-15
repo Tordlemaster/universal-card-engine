@@ -1,22 +1,126 @@
 use std::str::FromStr;
 
-use crate::rules::{state::{StateSet, State}};
+use crate::rules::{state::*, conditional::{conditional::*, deck_conditional::*, player_conditional::*}, routine::{routine::*, choice_routine::*, cond_routine::*, iter_routine::*, primitives::*, evaluatables::*}};
 
 grammar;
 
+String: String = {
+    <x: r#""([A-Z]|[a-z]|[_ '#!]|\[|\])*""#> => {
+        x[1..x.len()-1].into()
+    }
+};
+
+USize: usize = {
+    <u:r"[0-9]+"> => usize::from_str(u).unwrap()
+};
+
+//VarName: String = {
+//    <r"[A-Z]*">
+//};
+
 pub States: StateSet = {
-    "STATES" <v: ("{" (<StateDef>)+ "}")> => StateSet::new(v.iter().map(|s| s.0), v.iter().map(|s| s.1))
+    "STATES" "{" <mut v: StateDef+> "}" => StateSet::new(v.iter().map(|s| s.0.clone()).collect(), v.iter_mut().map(|s| &mut s.1).collect())
 };
 
-pub StateDef: (String, Box<State>) = {
-    <n: StateName> "{" <s: StateBody> "}" => (n, Box::new(State::new(s)))
+pub StateDef: (String, Option<State>) = {
+    <n: String> "{" <s: StateBody> "}" => (n, Some(State::new(s)))
 };
 
-pub StateName: String = {
-    <s: r"[A-Z]*"> => s
-};
+//pub StateName: String = {
+//    <s: r"[A-Z]*"> => s
+//};
 
 pub StateBody: Box<dyn Routine> = {
-    <Routine>
+    <SeqRoutine>
+};
+
+pub DeckArgs: (bool, bool, bool) = {
+    <d: r"[AS][DU][01]"> => {(d.chars().nth(0) == Some('S'), d.chars().nth(1) == Some('U'), d.chars().nth(2) == Some('1'))}
+};
+
+pub PlayerNameList: Vec<String> = {
+    "[" <mut v:(<String> ",")*> <s: String?> "]" => match s {
+        None => v,
+        Some(s) => {
+            v.push(s);
+            v
+        }
+    }
 }
 
+DealChoiceUnlimited: Box<DealChoiceRoutine> = {
+    "DEALCHOICE" <s: String> <d: String> <n: USize> => Box::new(DealChoiceRoutine::new(&s, &d, ChoiceLimit::Limited(n)))
+};
+DealChoiceLimited: Box<DealChoiceRoutine> = {
+    "DEALCHOICE" <s: String> <d: String> => Box::new(DealChoiceRoutine::new(&s, &d, ChoiceLimit::Unlimited))
+};
+
+pub VarBindList: Vec<(String, String)> = {
+    "{" <v:(<String> "=" <String> )*> "}" => v
+};
+
+pub SeqRoutine: Box<SeqRoutine> = {
+    <v:(<Routine>)+> => Box::new(SeqRoutine::new(v))
+};
+
+pub Conditions: Vec<Box<dyn Conditional>> = {
+    <c: Conditional+> => c
+};
+
+pub DeckCond: Box<dyn DeckConditionalElement> = {
+    "SUITS:SAME" => Box::new(DeckSuitsConditional::new(DeckSuitsComp::Same)),
+    "VALS:SAME" => Box::new(DeckValsConditional::new(DeckValsComp::Same)),
+    "VALS:CONS" => Box::new(DeckValsConditional::new(DeckValsComp::Cons)),
+    "LEN:LESS(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::Less)),
+    "LEN:LEQ(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::LEq)),
+    "LEN:EQ(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::Eq)),
+    "LEN:GEQ(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::GEq)),
+    "LEN:GREATER(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::Greater)),
+};
+
+pub PlayerCond: Box<dyn PlayerConditionalElement> = {
+    "NAME(" <s:String> ")" => Box::new(PlayerNameConditional::new(&s))
+};
+
+pub Conditional: Box<dyn Conditional> = {
+    "NOT" <Conditional> => Box::new(NotConditional::new(<>)),
+    "DECKCOND" <n: String> "{" <c: DeckCond+> "}" => Box::new(DeckConditional::new(c, ConditionalMode::And, &n)),
+    "PLAYERCOND" <v:String> "{" <c: PlayerCond+> "}" => Box::new(PlayerConditional::new(c, ConditionalMode::And, &v)),
+};
+
+pub CondMode: ConditionalMode = {
+    "OR" => ConditionalMode::Or,
+    "AND" => ConditionalMode::And,
+}
+
+pub Choice: Choice = {
+    <n: String> "PRECOND" <m:CondMode> "{" <c: Conditional+> "}" "{" <r:SeqRoutine> "}" => 
+        Choice::new(n, CondRoutine::new(Box::new(MultiConditional::new(c, m)), r, CondRoutineMode::PreCond)),
+
+    <n: String> "POSTCOND" <m:CondMode> "{" <c: Conditional+> "}" "{" <r:SeqRoutine> "}" => 
+        Choice::new(n, CondRoutine::new(Box::new(MultiConditional::new(c, m)), r, CondRoutineMode::PostCond)),
+    
+    <n: String> "NOCOND" "{" <r:SeqRoutine> "}" =>
+        Choice::new(n, CondRoutine::without_cond(r)),
+};
+
+pub Routine: Box<dyn Routine> = {
+    "NEWSDECK" <n: String> <d: DeckArgs> <p: PlayerNameList> => Box::new(CreateSourceDeckRoutine::new(&n, DeckVisibilityEvaluatable::new(d.0, d.2, p, Vec::new()))),
+    "NEWDECK" <n: String> <d: DeckArgs> <p: PlayerNameList> => Box::new(CreateDeckRoutine::new(&n, DeckVisibilityEvaluatable::new(d.0, d.2, p, Vec::new()))),
+    "DEALTOP" <s: String> <d: String> <n: USize> => Box::new(DealTopRoutine::new(&s, &d, n)),
+    "DEALRAND" <s: String> <d: String> <n: USize> => Box::new(DealRandRoutine::new(&s, &d, n)),
+    <d: DealChoiceUnlimited> => d,
+    <d: DealChoiceLimited> => d,
+    "STATE" <String> <VarBindList> => Box::new(StateSwitchRoutine::new(<>)),
+    "PRINT" <s: String> => Box::new(PrintMsgRoutine::new(&s)),
+    "PRINTDECKS" => Box::new(PrintDecksRoutine::new()),
+
+    "FORPLAYER" "{" <r: SeqRoutine> "}" => Box::new(ForPlayerRoutine::new(r)),
+    "LOOP" "{" <r: SeqRoutine> "}" => Box::new(LoopRoutine::new(r)),
+
+    "CHOOSE" <u: USize> "{" <c: Choice+> "}" => Box::new(ChoicesRoutine::new(c, ChoiceLimit::Limited(u))),
+    "CHOOSE" "{" <c: Choice+> "}" => Box::new(ChoicesRoutine::new(c, ChoiceLimit::Unlimited)),
+
+    "IF" "{" <c: Conditional+> "}" "{" <r:SeqRoutine> "}" =>
+        Box::new(IfRoutine::new(CondRoutine::new(Box::new(MultiConditional::new(c, ConditionalMode::And)), r, CondRoutineMode::PreCond))),
+};
