@@ -142,7 +142,7 @@ impl Routine for DealTopRoutine {
 
 
 ///For dealing n cards from specific indices in source to the end of dest
-pub struct DealSpecificRoutine {
+pub struct DealChoiceRoutine {
     source: EvaluatableString,
     dest: EvaluatableString,
     n: ChoiceLimit,
@@ -150,13 +150,13 @@ pub struct DealSpecificRoutine {
     exec_idcs: Vec<usize>
 }
 
-impl DealSpecificRoutine {
-    pub fn new(source: &String, dest: &String, n: ChoiceLimit) -> DealSpecificRoutine{
-        DealSpecificRoutine { source: EvaluatableString::new(source), dest: EvaluatableString::new(dest), n: n, exec_idcs: Vec::new() }
+impl DealChoiceRoutine {
+    pub fn new(source: &String, dest: &String, n: ChoiceLimit) -> DealChoiceRoutine{
+        DealChoiceRoutine { source: EvaluatableString::new(source), dest: EvaluatableString::new(dest), n: n, exec_idcs: Vec::new() }
     }
 }
 
-impl Routine for DealSpecificRoutine {
+impl Routine for DealChoiceRoutine {
     fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
         //TODO TODO TODO TODO
         //println!("Executing DealSpecificRoutine");

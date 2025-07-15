@@ -1,4 +1,4 @@
-use crate::rules::{conditional::{conditional::{ConditionalMode, MultiConditional, NotConditional, TrueConditional}, deck_conditional::{DeckConditional, DeckLenComp, DeckLenConditional, DeckSuitsComp, DeckSuitsConditional, DeckValsComp, DeckValsConditional}, player_conditional::{PlayerConditional, PlayerNameConditional}}, deck::{CardAttr, CardSetData}, game::{Game, GameWorld}, player::Player, routine::{choice_routine::{Choice, ChoiceLimit, ChoicesRoutine}, cond_routine::{CondRoutine, CondRoutineMode, IfRoutine}, evaluatables::{DeckVisibilityEvaluatable, EvaluatableString}, iter_routine::{ForPlayerCondRoutine, ForPlayerRoutine}, primitives::{CreateDeckRoutine, CreateSourceDeckRoutine, DealRandRoutine, DealSpecificRoutine, LoopRoutine, PrintDecksRoutine, PrintMsgRoutine, StateSwitchRoutine}, routine::SeqRoutine}, state::{State, StateSet}, variable::VarBindSet};
+use crate::rules::{conditional::{conditional::{ConditionalMode, MultiConditional, NotConditional, TrueConditional}, deck_conditional::{DeckConditional, DeckLenComp, DeckLenConditional, DeckSuitsComp, DeckSuitsConditional, DeckValsComp, DeckValsConditional}, player_conditional::{PlayerConditional, PlayerNameConditional}}, deck::{CardAttr, CardSetData}, game::{Game, GameWorld}, player::Player, routine::{choice_routine::{Choice, ChoiceLimit, ChoicesRoutine}, cond_routine::{CondRoutine, CondRoutineMode, IfRoutine}, evaluatables::{DeckVisibilityEvaluatable, EvaluatableString}, iter_routine::{ForPlayerCondRoutine, ForPlayerRoutine}, primitives::{CreateDeckRoutine, CreateSourceDeckRoutine, DealRandRoutine, DealChoiceRoutine, LoopRoutine, PrintDecksRoutine, PrintMsgRoutine, StateSwitchRoutine}, routine::SeqRoutine}, state::{State, StateSet}, variable::VarBindSet};
 
 pub fn rummy() -> Game {
     let game = Game::new(
@@ -29,7 +29,7 @@ pub fn rummy() -> Game {
         StateSet::new(
             vec!["SETUP".to_string(), "MAIN".to_string(), "SCORING".to_string()],
             vec![
-                Some(State::new(
+                &mut Some(State::new(
                     Box::new(SeqRoutine::new(vec![
                         Box::new(CreateSourceDeckRoutine::new(&"Draw pile".to_string(), DeckVisibilityEvaluatable::new(true, false, Vec::new(), Vec::new()))),
                         Box::new(CreateDeckRoutine::new(&"Discard pile".to_string(), DeckVisibilityEvaluatable::new(true, true, Vec::new(), Vec::new()))),
@@ -43,7 +43,7 @@ pub fn rummy() -> Game {
                         Box::new(StateSwitchRoutine::new("MAIN".to_string(), Vec::new()))
                     ]))
                 )),
-                Some(State::new(
+                &mut Some(State::new(
                     Box::new(SeqRoutine::new(vec![
                         Box::new(LoopRoutine::new(
                             Box::new(ForPlayerRoutine::new(
@@ -84,7 +84,7 @@ pub fn rummy() -> Game {
                                                             Box::new(DeckConditional::new(
                                                                 vec![
                                                                     Box::new(DeckSuitsConditional::new(DeckSuitsComp::Same)),
-                                                                    Box::new(DeckValsConditional::new(DeckValsComp::Consecutive))
+                                                                    Box::new(DeckValsConditional::new(DeckValsComp::Cons))
                                                                 ],
                                                                 ConditionalMode::And,
                                                                 &"Meld [#]".to_string()
@@ -94,7 +94,7 @@ pub fn rummy() -> Game {
                                                     )),
                                                     Box::new(SeqRoutine::new(vec![
                                                         Box::new(CreateDeckRoutine::new(&"Meld [#]".to_string(), DeckVisibilityEvaluatable::new(false, true, Vec::new(), Vec::new()))),
-                                                        Box::new(DealSpecificRoutine::new(&"[THISPLAYER]'s hand".to_string(), &"Meld [#]".to_string(), ChoiceLimit::Limited(3))),
+                                                        Box::new(DealChoiceRoutine::new(&"[THISPLAYER]'s hand".to_string(), &"Meld [#]".to_string(), ChoiceLimit::Limited(3))),
                                                         Box::new(PrintDecksRoutine::new()),
                                                     ])),
                                                     CondRoutineMode::PostCond
@@ -115,7 +115,7 @@ pub fn rummy() -> Game {
                                                             Box::new(DeckConditional::new(
                                                                 vec![
                                                                     Box::new(DeckSuitsConditional::new(DeckSuitsComp::Same)),
-                                                                    Box::new(DeckValsConditional::new(DeckValsComp::Consecutive))
+                                                                    Box::new(DeckValsConditional::new(DeckValsComp::Cons))
                                                                 ],
                                                                 ConditionalMode::And,
                                                                 &"Meld [N]".to_string()
@@ -124,7 +124,7 @@ pub fn rummy() -> Game {
                                                         ConditionalMode::Or
                                                     )),
                                                     Box::new(SeqRoutine::new(vec![
-                                                        Box::new(DealSpecificRoutine::new(&"[THISPLAYER]'s hand".to_string(), &"Meld [N]".to_string(), ChoiceLimit::Unlimited)),
+                                                        Box::new(DealChoiceRoutine::new(&"[THISPLAYER]'s hand".to_string(), &"Meld [N]".to_string(), ChoiceLimit::Unlimited)),
                                                         Box::new(PrintDecksRoutine::new()),
                                                     ])),
                                                     CondRoutineMode::PostCond
@@ -134,7 +134,7 @@ pub fn rummy() -> Game {
                                         ChoiceLimit::Unlimited
                                     )),
                                     Box::new(PrintMsgRoutine::new(&"Discard a card:".to_string())),
-                                    Box::new(DealSpecificRoutine::new(&"[THISPLAYER]'s hand".to_string(), &"Discard pile".to_string(), ChoiceLimit::Limited(1))),
+                                    Box::new(DealChoiceRoutine::new(&"[THISPLAYER]'s hand".to_string(), &"Discard pile".to_string(), ChoiceLimit::Limited(1))),
                                     Box::new(IfRoutine::new(CondRoutine::new(
                                         Box::new(DeckConditional::new(
                                             vec![
@@ -151,7 +151,7 @@ pub fn rummy() -> Game {
                         ))
                     ]))
                 )),
-                Some(State::new(
+                &mut Some(State::new(
                     Box::new(SeqRoutine::new(vec![
                         Box::new(PrintMsgRoutine::new(&String::from("[WINPLAYER] has won!"))),
                         /*Box::new(ForPlayerCondRoutine::new(

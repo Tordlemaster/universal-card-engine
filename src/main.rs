@@ -1,3 +1,5 @@
+use std::fs;
+
 use lalrpop_util::lalrpop_mod;
 
 use crate::{interface::deck_printing::{print_all_decks, print_deck}, rules::{deck::{CardAttr, CardSetData, DeckVisibility}, game::{Game, GameWorld}, player::Player, routine::evaluatables::EvaluatableString, state::StateSet, variable::VarBindSet}};
@@ -7,6 +9,7 @@ pub mod interface;
 pub mod script;
 
 mod test_rummy;
+mod test;
 
 lalrpop_mod!(grammar);
 
@@ -80,13 +83,62 @@ fn test() {
     print_all_decks(&world.world(), &world.get_players().get_player_by_idx(0).unwrap());*/
 }
 
-fn main() {
-    if true {
-        let mut g = test_rummy::rummy();
-        g.launch();
-        print_all_decks(&g.world(), &g.world().get_players().get_player_by_idx(0).unwrap());
+fn parse_script(path: String) -> Result<Game, ()> {
+    if let Ok(script) = fs::read_to_string(path) {
+        let p = grammar::StatesParser::new();
+        match p.parse(&script.as_str()) {
+            Ok(ss) => {
+                Ok(Game::new(
+                    vec![Player::new("bip".to_string(), 0), Player::new("bop".to_string(), 1)],
+                    CardSetData::new(
+                        vec![
+                            CardAttr::new("Clubs".to_string(), "C".to_string()),
+                            CardAttr::new("Spades".to_string(), "S".to_string()),
+                            CardAttr::new("Hearts".to_string(), "H".to_string()),
+                            CardAttr::new("Diamonds".to_string(), "D".to_string())
+                        ],
+                        vec![
+                            CardAttr::new("Ace".to_string(), "A".to_string()),
+                            CardAttr::new("Two".to_string(), "2".to_string()),
+                            CardAttr::new("Three".to_string(), "3".to_string()),
+                            CardAttr::new("Four".to_string(), "4".to_string()),
+                            CardAttr::new("Five".to_string(), "5".to_string()),
+                            CardAttr::new("Six".to_string(), "6".to_string()),
+                            CardAttr::new("Seven".to_string(), "7".to_string()),
+                            CardAttr::new("Eight".to_string(), "8".to_string()),
+                            CardAttr::new("Nine".to_string(), "9".to_string()),
+                            CardAttr::new("Jack".to_string(), "J".to_string()),
+                            CardAttr::new("Queen".to_string(), "Q".to_string()),
+                            CardAttr::new("King".to_string(), "K".to_string()),
+                        ],
+                        1
+                    ),
+                    ss
+                ))
+            }
+            Err(e) => {
+                println!("{}", e);
+                Err(())
+            }
+        }
     }
     else {
-        test();
+        println!("Invalid filepath");
+        Err(())
+    }
+}
+
+fn main() {
+    if true {
+        //let mut g = test_rummy::rummy();
+        if let Ok(mut g) = parse_script("./games/rummy.uce".to_string()) {
+            g.launch();
+            print_all_decks(&g.world(), &g.world().get_players().get_player_by_idx(0).unwrap());
+        }
+        else {panic!()}
+    }
+    else {
+        //println!("{}", grammar::PlayerNameListParser::new().parse("[ ]").is_ok())
+        test::test_();
     }
 }

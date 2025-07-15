@@ -1,11 +1,11 @@
 STATES {
     "SETUP" {
-        NEWSDECK "Draw pile" SD0 [ ]
-        NEWDECK "Discard pile" SU1 [ ]
+        NEWSDECK "Draw pile" SD UNOWNED
+        NEWDECK "Discard pile" SU UNOWNED
 
         FORPLAYER {
-            NEWDECK "[THISPLAYER]'s hand" AD0 ["[THISPLAYER]"]
-            DEALRAND "Draw pile" "[THISPLAYER]'s hand" 10
+            NEWDECK "[THISPLAYER]'s hand" AD [THISPLAYER]
+            DEALRAND "Draw pile" "[THISPLAYER]'s hand" 1
         }
 
         DEALRAND "Draw pile" "Discard pile" 1
@@ -16,59 +16,43 @@ STATES {
     "MAIN" {
         LOOP {
             FORPLAYER {
-                PRINTDECKS
-
                 CHOOSE 1 {
-                    "Draw from draw pile" NOCOND {
+                    "Draw from draw pile" {
                         DEALRAND "Draw pile" "[THISPLAYER]'s hand" 1
                     }
 
-                    "Draw from discard pile" NOCOND {
-                        DEALRAND "Discard pile" "[THISPLAYER]'s hand" 1
+                    "Draw from discard pile" {
+                        DEALCHOICE "Discard pile" "[THISPLAYER]'s hand" 1
                     }
                 }
-                
-                PRINTDECKS
 
                 CHOOSE {
-                    "Create a new meld" POSTCOND OR {
+                    "Meld" POSTCOND {
                         DECKCOND "Meld [#]" {
                             SUITS:SAME
                             VALS:CONS
-                            LEN:GEQ(3)
-                        }
-                        DECKCOND "Meld [#]" {
-                            VALS:SAME
-                            LEN:GEQ(3)
                         }
                     } {
-                        NEWDECK "Meld [#]" AD1 [ ]
+                        NEWDECK "Meld [#]" AD UNOWNED
                         DEALCHOICE "[THISPLAYER]'s hand" "Meld [#]"
-                        PRINTDECKS
                     }
 
-                    "Lay off to an existing meld" POSTCOND OR {
+                    "Lay off" POSTCOND {
                         DECKCOND "Meld [#]" {
                             SUITS:SAME
                             VALS:CONS
-                            LEN:GEQ(3)
-                        }
-                        DECKCOND "Meld [#]" {
-                            VALS:SAME
-                            LEN:GEQ(3)
                         }
                     } {
                         DEALCHOICE "[THISPLAYER]'s hand" "Meld [#]"
-                        PRINTDECKS
                     }
                 }
 
-                PRINT "Discard a card"
+                PRINT "Discard a card:"
                 DEALCHOICE "[THISPLAYER]'s hand" "Discard pile" 1
 
                 IF {
                     DECKCOND "[THISPLAYER]'s hand" {
-                        LEN:LEQ(0)
+                        SIZE:LEQ(0)
                     }
                 } {
                     STATE "SCORING" {"WINPLAYER"="[THISPLAYER]"}
@@ -78,7 +62,13 @@ STATES {
     }
 
     "SCORING" {
-        PRINT "[WINPLAYER] has won!"
-        STATE "_END" {}
+        FORPLAYERCOND {
+            NOT PLAYERCOND {
+                PLAYERNAME [WINPLAYER]
+            }
+        } {
+            VARASSIGN [X] SCOREDECK "[THISPLAYER]'s hand" 
+            SCORE ADD [THISPLAYER] [X]
+        }
     }
 }
