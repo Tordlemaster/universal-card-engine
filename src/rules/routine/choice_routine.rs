@@ -1,4 +1,4 @@
-use crate::{interface::interface::choice_interface, rules::{conditional::conditional::TrueConditional, game::GameWorld, routine::{cond_routine::{CondRoutine, CondRoutineMode, CondRoutineReturn}, primitives::NullRoutine, routine::Routine}, state::StateSwitchData, variable::{TempVars, VarBindSet}}};
+use crate::{interface::interface::{choice_interface, print_game}, rules::{conditional::conditional::TrueConditional, game::GameWorld, routine::{cond_routine::{CondRoutine, CondRoutineMode, CondRoutineReturn}, primitives::NullRoutine, routine::Routine}, state::StateSwitchData, variable::{TempVars, VarBindSet}}};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum ChoiceLimit {
@@ -49,6 +49,8 @@ impl ChoicesRoutine {
 
 impl Routine for ChoicesRoutine {
     fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
+        print_game(bindings, game_world, choice_vars);
+        
         match self.mode {
             ChoiceLimit::Limited(limit) => {
                 for l in (1..=limit).rev() {
