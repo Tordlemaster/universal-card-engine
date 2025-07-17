@@ -1,6 +1,6 @@
 use std::cmp::{max, min};
 
-use crate::rules::{conditional::conditional::{Conditional, ConditionalMode}, deck::Deck, game::GameWorld, routine::evaluatables::EvaluatableString, variable::{TempVars, VarBindSet}};
+use crate::rules::{conditional::conditional::{Conditional, ConditionalMode, ValCompMode}, deck::Deck, game::GameWorld, routine::evaluatables::EvaluatableString, variable::{TempVars, VarBindSet}};
 
 pub trait DeckConditionalElement {
     fn evaluate(&self, deck: &Deck) -> bool;
@@ -45,16 +45,14 @@ impl Conditional for DeckConditional {
     }
 }
 
-pub enum DeckLenComp {
-    Less, LEq, Eq, GEq, Greater
-}
+
 pub struct DeckLenConditional {
     len: usize,
-    mode: DeckLenComp
+    mode: ValCompMode
 }
 
 impl DeckLenConditional {
-    pub fn new(len: usize, mode: DeckLenComp) -> DeckLenConditional {
+    pub fn new(len: usize, mode: ValCompMode) -> DeckLenConditional {
         DeckLenConditional { len: len, mode: mode }
     }
 }
@@ -62,11 +60,11 @@ impl DeckLenConditional {
 impl DeckConditionalElement for DeckLenConditional {
     fn evaluate(&self, deck: &Deck) -> bool {
         match self.mode {
-            DeckLenComp::Less => deck.len() < self.len,
-            DeckLenComp::LEq => deck.len() <= self.len,
-            DeckLenComp::Eq => deck.len() == self.len,
-            DeckLenComp::GEq => deck.len() >= self.len,
-            DeckLenComp::Greater => deck.len() > self.len
+            ValCompMode::Less => deck.len() < self.len,
+            ValCompMode::LEq => deck.len() <= self.len,
+            ValCompMode::Eq => deck.len() == self.len,
+            ValCompMode::GEq => deck.len() >= self.len,
+            ValCompMode::Greater => deck.len() > self.len
         }
     }
 }

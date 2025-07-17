@@ -43,5 +43,5 @@ pub fn print_deck(deck_name: &String, deck: &Deck, player: &Player, card_set_dat
 }
 
 pub fn card_to_str(card: &Card, card_set_data: &CardSetData) -> String {
-    format!("{} of {}", card_set_data.value_names[card.get_value()].name, card_set_data.suit_names[card.get_suit()].name)
+    format!("{} of {}", card_set_data.values[card.get_value()].name, card_set_data.suits[card.get_suit()].name)
 }

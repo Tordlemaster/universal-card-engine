@@ -1,4 +1,4 @@
-use crate::rules::{conditional::conditional::Conditional, game::GameWorld, routine::routine::Routine, state::StateSwitchData, variable::{TempVars, VarBindSet}};
+use crate::rules::{conditional::conditional::Conditional, game::GameWorld, routine::{cond_routine::{CondRoutine, CondRoutineMode, IfRoutine}, routine::Routine}, state::StateSwitchData, variable::{TempVars, VarBindSet}};
 
 pub struct ForPlayerRoutine {
     routine: Box<dyn Routine>
@@ -15,7 +15,7 @@ impl Routine for ForPlayerRoutine {
         let players = game_world.get_players().clone();
         for player in players.players_iter() {
 
-            println!("\n-- {}'s Turn --\n", player.name());
+            //println!("\n-- {}'s Turn --\n", player.name());
 
             let mut new_bindings = bindings.clone();
             new_bindings.insert_str_var(&String::from("THISPLAYER"), player.name().clone());
@@ -42,12 +42,11 @@ impl Routine for ForPlayerRoutine {
 
 pub struct ForPlayerCondRoutine {
     routine: Box<dyn Routine>,
-    cond: Box<dyn Conditional>
 }
 
 impl ForPlayerCondRoutine {
     pub fn new(cond: Box<dyn Conditional>, routine: Box<dyn Routine>) -> ForPlayerCondRoutine {
-        ForPlayerCondRoutine { routine: routine, cond: cond}
+        ForPlayerCondRoutine { routine: Box::new(IfRoutine::new(CondRoutine::new(cond, routine, CondRoutineMode::PreCond)))}
     }
 }
 
@@ -56,7 +55,7 @@ impl Routine for ForPlayerCondRoutine {
         let players = game_world.get_players().clone();
         for player in players.players_iter() {
 
-            println!("\n-- {}'s Turn --\n", player.name());
+            //println!("\n-- {}'s Turn --\n", player.name());
 
             let mut new_bindings = bindings.clone();
             new_bindings.insert_str_var(&String::from("THISPLAYER"), player.name().clone());

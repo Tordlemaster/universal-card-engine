@@ -25,60 +25,6 @@ impl Game {
         &self.world
     }
 
-    pub fn add_source_deck(&mut self, name: String, visibility: DeckVisibility) {
-        self.world.decks.add_source_deck(self.world.card_set_data.total_cards(), name, visibility);
-    }
-    pub fn add_deck(&mut self, name: String, visibility: DeckVisibility) {
-        self.world.decks.add_deck(name, visibility);
-    }
-
-    pub fn remove_deck(&mut self, name: &String) {
-        self.world.decks.remove_deck(name);
-    }
-
-    pub fn deal(&mut self, source: &String, dest: &String, n: usize) -> Result<usize, usize>{
-        for i in 0..n {
-            if let Some(source_deck) = self.world.decks.get_deck_mut(source) {
-                if let Some(card) = source_deck.draw_card() {
-                    if let Some(dest_deck) = self.world.decks.get_deck_mut(dest) {
-                        dest_deck.insert_card(card);
-                    }
-                    else {
-                        panic!("Script error: Deck \"{}\" not found", dest);
-                    }
-                }
-                else {
-                    return Err(max(i-1, 0));
-                }
-            }
-            else {
-                panic!("Script error: Deck \"{}\" not found", source);
-            }
-        }
-        return Ok(n);
-    }
-
-    //Deal card at index idx in source deck to dest deck
-    pub fn deal_idx(&mut self, source: &String, dest: &String, idx: usize) -> Result<usize, usize>{
-        if let Some(source_deck) = self.world.decks.get_deck_mut(source) {
-            if let Some(card) = source_deck.draw_card_idx(idx) {
-                if let Some(dest_deck) = self.world.decks.get_deck_mut(dest) {
-                    dest_deck.insert_card(card);
-                }
-                else {
-                    panic!("Script error: Deck \"{}\" not found", dest);
-                }
-            }
-            else {
-                return Err(0);
-            }
-        }
-        else {
-            panic!("Script error: Deck \"{}\" not found", source);
-        }
-        return Ok(1);
-    }
-
     pub fn get_deck(&self, name: &String) -> Option<&Deck> {
         self.world.decks.get_deck(name)
     }
@@ -109,11 +55,14 @@ impl GameWorld {
         self.decks.remove_deck(name);
     }
 
-    pub fn deal(&mut self, source: &String, dest: &String, n: usize) -> Result<usize, usize> {
+    pub fn deal(&mut self, source: &String, dest: &String, n: usize) -> Result<Vec<usize>, Vec<usize>> {
+        let mut dealings: Vec<usize> = Vec::new();
         for i in 0..n {
             if let Some(source_deck) = self.decks.get_deck_mut(source) {
-                if let Some(card) = source_deck.draw_card() {
+                if let Some((draw_idx, card)) = source_deck.draw_card() {
                     if let Some(dest_deck) = self.decks.get_deck_mut(dest) {
+                        //let offset: usize = dealings.iter().map(|x| (*x < draw_idx) as usize).sum();
+                        dealings.push(draw_idx);
                         dest_deck.insert_card(card);
                     }
                     else {
@@ -121,14 +70,14 @@ impl GameWorld {
                     }
                 }
                 else {
-                    return Err(max(i-1, 0));
+                    return Err(dealings);
                 }
             }
             else {
                 panic!("Script error: Deck \"{}\" not found", source);
             }
         }
-        return Ok(n);
+        return Ok(dealings);
     }
 
     ///Deal cards from the top of source to the end of dest
@@ -189,5 +138,9 @@ impl GameWorld {
 
     pub fn get_players(&self) -> &PlayerSet {
         &self.players
+    }
+
+    pub fn add_player_score(&mut self, player_name: &String, score: u32) {
+        self.players.add_player_score(player_name, score);
     }
 }

@@ -5,7 +5,8 @@ use rand::seq::SliceRandom;
 #[derive (Clone)]
 pub struct PlayerIndices {
     name_idx: usize,
-    team_idx: usize
+    team_idx: usize,
+    score: u32
 }
 
 #[derive (Clone)]
@@ -21,7 +22,7 @@ impl PlayerSet {
 
         let mut player_set = PlayerSet{players: Vec::new(), names: Vec::new(), teams: Vec::new()};
         for p in players {
-            let mut new_player = PlayerIndices{name_idx: 0, team_idx: 0};
+            let mut new_player = PlayerIndices{name_idx: 0, team_idx: 0, score: 0};
 
             //Initialize player name
             if let Some(i) = player_set.names.iter().position(|s| *s == p.name) {
@@ -47,7 +48,7 @@ impl PlayerSet {
     }
 
     pub fn players_iter(&self) -> impl Iterator<Item = Player> {
-        self.players.iter().map(|i| Player { name: self.names[i.name_idx].clone(), team: self.teams[i.team_idx] })
+        self.players.iter().map(|i| Player { name: self.names[i.name_idx].clone(), team: self.teams[i.team_idx], score: i.score })
     }
 
     pub fn names(&self) -> &Vec<String> {
@@ -65,7 +66,7 @@ impl PlayerSet {
     pub fn get_player_by_idx(&self, idx: usize) -> Option<Player> {
         if idx >= 0 && idx < self.players.len() {
             let p = &self.players[idx];
-            Some(Player { name: self.names[p.name_idx].clone(), team: self.teams[p.team_idx] })
+            Some(Player { name: self.names[p.name_idx].clone(), team: self.teams[p.team_idx], score: p.score })
         }
         else {
             None
@@ -77,23 +78,32 @@ impl PlayerSet {
 
         if idx >= 0 && idx < self.players.len() {
             let p = &self.players[idx];
-            Some(Player { name: self.names[p.name_idx].clone(), team: self.teams[p.team_idx] })
+            Some(Player { name: self.names[p.name_idx].clone(), team: self.teams[p.team_idx], score: p.score })
         }
         else {
             None
         }
+    }
+    pub fn player_idx_from_name(&self, s: &String) -> Option<usize> {
+        let name_idx = self.names.iter().position(|x| x==s)?;
+        self.players.iter().position(|x| x.name_idx==name_idx)
+    }
+    pub fn add_player_score(&mut self, player_name: &String, score: u32) {
+        let i = self.player_idx_from_name(player_name).unwrap();
+        self.players[i].score += score; 
     }
 }
 
 #[derive(Clone)]
 pub struct Player {
     name: String,
-    team: usize
+    team: usize,
+    score: u32
 }
 
 impl Player {
     pub fn new(name: String, team: usize) -> Player {
-        Player { name: name, team: team }
+        Player { name: name, team: team, score: 0 }
     }
 
     pub fn name(&self) -> &String {
@@ -102,5 +112,9 @@ impl Player {
 
     pub fn team(&self) -> &usize {
         &self.team
+    }
+
+    pub fn score(&self) -> u32 {
+        self.score
     }
 }
