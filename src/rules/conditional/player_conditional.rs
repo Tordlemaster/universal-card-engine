@@ -1,4 +1,4 @@
-use crate::rules::{conditional::conditional::{Conditional, ConditionalMode}, game::GameWorld, player::Player, routine::evaluatables::EvaluatableString, variable::{TempVars, VarBindSet}};
+use crate::rules::{conditional::conditional::{Conditional, ConditionalMode, ValCompMode}, game::GameWorld, player::Player, routine::evaluatables::EvaluatableString, variable::{TempVars, VarBindSet}};
 
 pub trait PlayerConditionalElement {
     fn evaluate(&self, player: &Player, bindings: &VarBindSet, game_world: &GameWorld, choice_var: &mut TempVars) -> bool;
@@ -55,5 +55,29 @@ impl PlayerNameConditional {
 impl PlayerConditionalElement for PlayerNameConditional {
     fn evaluate(&self, player: &Player, bindings: &VarBindSet, game_world: &GameWorld, choice_var: &mut TempVars) -> bool {
         *player.name() == self.name.evaluate(bindings, game_world, choice_var)
+    }
+}
+
+pub struct PlayerScoreConditional {
+    val: u32,
+    mode: ValCompMode
+}
+
+impl PlayerScoreConditional {
+    pub fn new(val: u32, mode: ValCompMode) -> PlayerScoreConditional {
+        PlayerScoreConditional { val: val, mode: mode }
+    }
+}
+
+impl PlayerConditionalElement for PlayerScoreConditional {
+    fn evaluate(&self, player: &Player, bindings: &VarBindSet, game_world: &GameWorld, choice_var: &mut TempVars) -> bool {
+        let score = player.score();
+        match self.mode {
+            ValCompMode::Less => score < self.val,
+            ValCompMode::LEq => score <= self.val,
+            ValCompMode::Eq => score == self.val,
+            ValCompMode::GEq => score >= self.val,
+            ValCompMode::Greater => score > self.val
+        }
     }
 }

@@ -1,5 +1,8 @@
 use crate::rules::{game::GameWorld, variable::{TempVars, VarBindSet}};
 
+pub enum ValCompMode {
+    Less, LEq, Eq, GEq, Greater
+}
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum ConditionalMode {

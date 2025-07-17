@@ -73,6 +73,23 @@ STATES {
     }
 
     "SCORING" {
+        FORPLAYERCOND {
+            NOT PLAYERCOND "[THISPLAYER]" {
+                NAME("[WINPLAYER]")
+            }
+        } {
+            SCOREADD "[THISPLAYER]'s hand" "[WINPLAYER]"
+        }
+        IF {
+            PLAYERCOND "[WINPLAYER]" {
+                SCORE:GEQ(500)
+            }
+        } {
+            STATE "WINNING" {"WINPLAYER"="[WINPLAYER]"}
+        }
+    }
+
+    "WINNING" {
         PRINT "[WINPLAYER] has won!"
         STATE "_END" {}
     }

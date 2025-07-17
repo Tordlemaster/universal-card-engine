@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::rules::{state::*, conditional::{conditional::*, deck_conditional::*, player_conditional::*}, routine::{routine::*, choice_routine::*, cond_routine::*, iter_routine::*, primitives::*, evaluatables::*}};
+use crate::rules::{state::*, conditional::{conditional::*, deck_conditional::*, player_conditional::*}, routine::{routine::*, choice_routine::*, cond_routine::*, iter_routine::*, primitives::*, evaluatables::*}, score::{score::*}};
 
 grammar;
 
@@ -67,19 +67,24 @@ pub Conditions: Vec<Box<dyn Conditional>> = {
     <c: Conditional+> => c
 };
 
+pub ValCompMode: (usize, ValCompMode) = {
+    "LESS(" <u: USize> ")" => (u, ValCompMode::Less),
+    "LEQ(" <u: USize> ")" => (u, ValCompMode::LEq),
+    "EQ(" <u: USize> ")" => (u, ValCompMode::Eq),
+    "GEQ(" <u: USize> ")" => (u, ValCompMode::GEq),
+    "GREATER(" <u: USize> ")" => (u, ValCompMode::Greater),
+}
+
 pub DeckCond: Box<dyn DeckConditionalElement> = {
     "SUITS:SAME" => Box::new(DeckSuitsConditional::new(DeckSuitsComp::Same)),
     "VALS:SAME" => Box::new(DeckValsConditional::new(DeckValsComp::Same)),
     "VALS:CONS" => Box::new(DeckValsConditional::new(DeckValsComp::Cons)),
-    "LEN:LESS(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::Less)),
-    "LEN:LEQ(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::LEq)),
-    "LEN:EQ(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::Eq)),
-    "LEN:GEQ(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::GEq)),
-    "LEN:GREATER(" <u: USize> ")" => Box::new(DeckLenConditional::new(u, DeckLenComp::Greater)),
+    "LEN:" <v: ValCompMode> => Box::new(DeckLenConditional::new(v.0, v.1)),
 };
 
 pub PlayerCond: Box<dyn PlayerConditionalElement> = {
-    "NAME(" <s:String> ")" => Box::new(PlayerNameConditional::new(&s))
+    "NAME(" <s:String> ")" => Box::new(PlayerNameConditional::new(&s)),
+    "SCORE:" <v: ValCompMode> => Box::new(PlayerScoreConditional::new(v.0 as u32, v.1)),
 };
 
 pub Conditional: Box<dyn Conditional> = {
@@ -111,11 +116,13 @@ pub Routine: Box<dyn Routine> = {
     "DEALRAND" <s: String> <d: String> <n: USize> => Box::new(DealRandRoutine::new(&s, &d, n)),
     <d: DealChoiceUnlimited> => d,
     <d: DealChoiceLimited> => d,
+    "SCOREADD" <d: String> <p: String> => Box::new(ScoreAddRoutine::new(&d, &p)),
     "STATE" <String> <VarBindList> => Box::new(StateSwitchRoutine::new(<>)),
     "PRINT" <s: String> => Box::new(PrintMsgRoutine::new(&s)),
     "PRINTDECKS" => Box::new(PrintDecksRoutine::new()),
 
     "FORPLAYER" "{" <r: SeqRoutine> "}" => Box::new(ForPlayerRoutine::new(r)),
+    "FORPLAYERCOND" "{" <c: Conditional+> "}" "{" <r: SeqRoutine> "}" => Box::new(ForPlayerCondRoutine::new(Box::new(MultiConditional::new(c, ConditionalMode::And)), r)),
     "LOOP" "{" <r: SeqRoutine> "}" => Box::new(LoopRoutine::new(r)),
 
     "CHOOSE" <u: USize> "{" <c: Choice+> "}" => Box::new(ChoicesRoutine::new(c, ChoiceLimit::Limited(u))),

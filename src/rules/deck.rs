@@ -5,17 +5,18 @@ use rand::random_range;
 pub struct CardAttr {
     pub name: String,
     pub abbrv: String,
+    pub val: u32
 }
 
 impl CardAttr {
-    pub fn new(name: String, abbrv: String) -> CardAttr {
-        CardAttr { name: name, abbrv: abbrv }
+    pub fn new(name: String, abbrv: String, val: u32) -> CardAttr {
+        CardAttr { name: name, abbrv: abbrv, val: val}
     }
 }
 
 pub struct CardSetData {
-    pub suit_names: Vec<CardAttr>,
-    pub value_names: Vec<CardAttr>,
+    pub suits: Vec<CardAttr>,
+    pub values: Vec<CardAttr>,
 
     ///How many cards per source deck
     pub cards_per_deck: usize,
@@ -28,8 +29,8 @@ impl CardSetData {
     pub fn new(suit_names: Vec<CardAttr>, value_names: Vec<CardAttr>, decks: usize) -> CardSetData {
         CardSetData {
             cards_per_deck: suit_names.len() * value_names.len(),
-            suit_names: suit_names,
-            value_names: value_names,
+            suits: suit_names,
+            values: value_names,
             num_decks: decks
         }
     }
@@ -110,9 +111,10 @@ impl Deck {
     }
 
     ///Draw a random card
-    pub fn draw_card(&mut self) -> Option<Card> {
+    pub fn draw_card(&mut self) -> Option<(usize, Card)> {
         if self.cards.len() > 0 {
-            Some(self.cards.remove(random_range(0..self.cards.len())))
+            let i = random_range(0..self.cards.len());
+            Some((i, self.cards.remove(i)))
         }
         else {
             None

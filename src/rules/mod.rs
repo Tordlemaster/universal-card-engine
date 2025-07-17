@@ -5,3 +5,4 @@ pub mod routine;
 pub mod conditional;
 pub mod deck;
 pub mod player;
+pub mod score;

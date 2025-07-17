@@ -87,27 +87,38 @@ impl Routine for RemoveDeckRoutine {
 pub struct DealRandRoutine {
     source: EvaluatableString,
     dest: EvaluatableString,
-    n: usize
+    n: usize,
+    prev_dealing: Option<Vec<usize>>,
 }
 
 impl DealRandRoutine {
     pub fn new(source: &String, dest: &String, n: usize) -> DealRandRoutine{
-        DealRandRoutine { source: EvaluatableString::new(source), dest: EvaluatableString::new(dest), n: n }
+        DealRandRoutine { source: EvaluatableString::new(source), dest: EvaluatableString::new(dest), n: n, prev_dealing: None }
     }
 }
 
 impl Routine for DealRandRoutine {
     fn execute (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> Option<StateSwitchData> {
-        if let Err(n_dealt) = game_world.deal(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), self.n) {
+        if let Ok(dealt) = game_world.deal(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), self.n) {
+            self.prev_dealing = Some(dealt);
+        }
+        else {
             //TODO replace panic with a real action
             panic!("Tried to draw from an empty deck {}!", self.source.evaluate(bindings, game_world, choice_vars));
         }
         None
     }
     fn undo (&mut self, bindings: &VarBindSet, game_world: &mut GameWorld, choice_vars: &mut TempVars) -> () {
-        if let Err(n_dealt) = game_world.deal(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), self.n) {
-            //TODO replace panic with a real action
-            panic!("PROGRAM ERROR: Tried to undo a deal action and drew from an empty deck {}, meaning execute() did not deal all or any cards first!", self.source.evaluate(bindings, game_world, choice_vars));
+        if self.prev_dealing.is_some() {
+            for idx in self.prev_dealing.as_ref().unwrap() {
+                if let Err(n_dealt) = game_world.deal_top(&self.source.evaluate(bindings, game_world, choice_vars), &self.dest.evaluate(bindings, game_world, choice_vars), 1) {
+                    //TODO replace panic with a real action
+                    panic!("PROGRAM ERROR: Tried to undo a deal action and drew from an empty deck {}, meaning execute() did not deal all or any cards first!", self.source.evaluate(bindings, game_world, choice_vars));
+                }
+            }
+        }
+        else {
+            panic!("Tried to undo() DealRandRoutine before execute()ing!")
         }
     }
 }
