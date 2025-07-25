@@ -1,0 +1,1 @@
+Using a generalized scripting language and its parser, this project aims to model every card game. As of July 2025, the language can only support Rummy, but more game support is coming. For language documentation, see /docs/docs.txt. Game scripts can be found in /games.

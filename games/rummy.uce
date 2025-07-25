@@ -10,7 +10,7 @@ STATES {
 
         DEALRAND "Draw pile" "Discard pile" 1
 
-        STATE "MAIN" {}
+        STATE "MAIN" []
     }
 
     "MAIN" {
@@ -66,7 +66,7 @@ STATES {
                         LEN:LEQ(0)
                     }
                 } {
-                    STATE "SCORING" {"WINPLAYER"="[THISPLAYER]"}
+                    STATE "SCORING" ["WINPLAYER"="[THISPLAYER]"]
                 }
             }
         }
@@ -85,12 +85,12 @@ STATES {
                 SCORE:GEQ(500)
             }
         } {
-            STATE "WINNING" {"WINPLAYER"="[WINPLAYER]"}
+            STATE "WINNING" ["WINPLAYER"="[WINPLAYER]"]
         }
     }
 
     "WINNING" {
         PRINT "[WINPLAYER] has won!"
-        STATE "_END" {}
+        STATE "_END" []
     }
 }

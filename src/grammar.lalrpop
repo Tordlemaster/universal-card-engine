@@ -56,7 +56,7 @@ DealChoiceLimited: Box<DealChoiceRoutine> = {
 };
 
 pub VarBindList: Vec<(String, String)> = {
-    "{" <v:(<String> "=" <String> )*> "}" => v
+    "[" <v:(<String> "=" <String> )*> "]" => v
 };
 
 pub SeqRoutine: Box<SeqRoutine> = {
@@ -119,7 +119,7 @@ pub Routine: Box<dyn Routine> = {
     "SCOREADD" <d: String> <p: String> => Box::new(ScoreAddRoutine::new(&d, &p)),
     "STATE" <String> <VarBindList> => Box::new(StateSwitchRoutine::new(<>)),
     "PRINT" <s: String> => Box::new(PrintMsgRoutine::new(&s)),
-    "PRINTDECKS" => Box::new(PrintDecksRoutine::new()),
+    //"PRINTDECKS" => Box::new(PrintDecksRoutine::new()),
 
     "FORPLAYER" "{" <r: SeqRoutine> "}" => Box::new(ForPlayerRoutine::new(r)),
     "FORPLAYERCOND" "{" <c: Conditional+> "}" "{" <r: SeqRoutine> "}" => Box::new(ForPlayerCondRoutine::new(Box::new(MultiConditional::new(c, ConditionalMode::And)), r)),
